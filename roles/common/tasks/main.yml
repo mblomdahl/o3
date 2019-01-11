@@ -13,4 +13,54 @@
       10.100.1.189    o3-slave5
   tags: common
 
+- name: create hadoop user
+  user:
+    name: hadoop
+    uid: 1001
+    comment: "Cluster user"
+  tags: common
+
+- name: set up authorized_keys for hadoop user
+  authorized_key: user=hadoop key="{{ item }}"
+  with_file:
+    - public_keys/hadoop_id_rsa.pub
+    - public_keys/mblomdahl_id_rsa.pub
+  tags: common
+
+- name: add private key for hadoop user
+  copy:
+    dest: /home/hadoop/.ssh/id_rsa
+    content: "{{ hadoop_id_rsa }}"
+    owner: hadoop
+    group: hadoop
+    mode: 0600
+  tags: common
+
+- name: add public key for hadoop user
+  copy:
+    src: public_keys/hadoop_id_rsa.pub
+    dest: /home/hadoop/.ssh/id_rsa.pub
+    owner: hadoop
+    group: hadoop
+    mode: 0644
+  tags: common
+
+- name: add ssh config for hadoop user
+  copy:
+    dest: /home/hadoop/.ssh/config
+    content: |
+      Host o3-*
+        StrictHostKeyChecking no
+        UserKnownHostsFile=/dev/null
+        LogLevel ERROR
+    owner: hadoop
+    group: hadoop
+  tags: common
+
+- name: install java-1.8.0-openjdk
+  yum:
+    name: java-1.8.0-openjdk
+    state: present
+  tags: common
+
 ...
