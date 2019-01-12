@@ -4,13 +4,7 @@
   blockinfile:
     path: /etc/hosts
     marker: "# {mark} ANSIBLE MANAGED BLOCK o3-common"
-    block: |
-      10.100.1.185    o3-master
-      10.100.1.182    o3-slave1
-      10.100.1.183    o3-slave2
-      10.100.1.184    o3-slave3
-      10.100.1.188    o3-slave4
-      10.100.1.189    o3-slave5
+    block: "{{ etc_hosts_routing }}"
   tags: common
 
 - name: create hadoop user
