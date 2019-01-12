@@ -5,6 +5,7 @@
     path: /etc/hosts
     marker: "# {mark} ANSIBLE MANAGED BLOCK o3-common"
     block: "{{ etc_hosts_routing }}"
+    state: "{{ 'present' if etc_hosts_routing else 'absent' }}"
   tags: common
 
 - name: create hadoop user
@@ -12,6 +13,7 @@
     name: hadoop
     uid: 1001
     comment: "Cluster user"
+    shell: /bin/bash
   tags: common
 
 - name: set up authorized_keys for hadoop user
@@ -51,10 +53,19 @@
     group: hadoop
   tags: common
 
-- name: install java-1.8.0-openjdk
+- name: install jdk 8 (ubuntu)
+  apt:
+    name: openjdk-8-jre
+    cache_valid_time: 86400
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+  tags: common
+
+- name: install jdk 8 (centos)
   yum:
     name: java-1.8.0-openjdk
     state: present
+  when: ansible_distribution == 'CentOS'
   tags: common
 
 ...
