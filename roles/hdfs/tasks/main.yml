@@ -1,0 +1,11 @@
+---
+
+- name: configure hadoop core-site.xml
+  copy:
+    src: core-site.xml
+    dest: /home/hadoop/hadoop/etc/hadoop/core-site.xml
+  become: yes
+  become_user: hadoop
+  tags: hdfs
+
+...

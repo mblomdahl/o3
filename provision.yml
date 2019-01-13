@@ -1,9 +1,15 @@
 ---
 
-- name: provision hdfs cluster
+- name: provision common baseline
   hosts: all
   become: yes
   roles:
     - common
+
+- name: provision hdfs
+  hosts: all
+  become: yes
+  roles:
+    - hdfs
 
 ...
