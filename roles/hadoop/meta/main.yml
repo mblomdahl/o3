@@ -1,6 +1,6 @@
 galaxy_info:
   author: Mats Blomdahl
-  description: Provisioning of HDFS configuration.
+  description: Provisioning of Hadoop HDFS and YARN.
 
   min_ansible_version: 2.7
 

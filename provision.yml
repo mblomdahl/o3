@@ -6,11 +6,11 @@
   roles:
     - common
 
-- name: provision hdfs
+- name: provision hdfs and yarn
   hosts: all
   become: yes
   become_user: hadoop
   roles:
-    - hdfs
+    - hadoop
 
 ...
