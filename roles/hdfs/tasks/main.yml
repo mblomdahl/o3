@@ -16,4 +16,12 @@
   become_user: hadoop
   tags: hdfs
 
+- name: configure hadoop mapred-site.xml
+  copy:
+    src: mapred-site.xml
+    dest: /home/hadoop/hadoop/etc/hadoop/mapred-site.xml
+  become: yes
+  become_user: hadoop
+  tags: hdfs
+
 ...
