@@ -24,4 +24,12 @@
   become_user: hadoop
   tags: hdfs
 
+- name: configure hadoop yarn-site.xml
+  copy:
+    src: yarn-site.xml
+    dest: /home/hadoop/hadoop/etc/hadoop/yarn-site.xml
+  become: yes
+  become_user: hadoop
+  tags: hdfs
+
 ...
