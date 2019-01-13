@@ -68,7 +68,7 @@
 
 - name: install jdk 8 (ubuntu)
   apt:
-    name: openjdk-8-jre
+    name: openjdk-8-jdk-headless
     cache_valid_time: 86400
     state: present
   when: ansible_distribution == 'Ubuntu'
@@ -76,7 +76,7 @@
 
 - name: install jdk 8 (centos)
   yum:
-    name: java-1.8.0-openjdk
+    name: java-1.8.0-openjdk-devel
     state: present
   when: ansible_distribution == 'CentOS'
   tags: common
