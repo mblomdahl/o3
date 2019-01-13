@@ -1,0 +1,7 @@
+---
+
+java_home: /usr/lib/jvm/java-1.8.0-openjdk{{ '' if ansible_distribution == 'CentOS' else '-amd64/jre' }}
+
+bash_profile_file: .{{ 'bash_' if ansible_distribution == 'CentOS' else '' }}profile
+
+...

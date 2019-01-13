@@ -1,0 +1,8 @@
+---
+
+etc_hosts_routing: |
+  172.30.3.59     o3-master
+  172.30.3.60     o3-slave1
+  172.30.3.159    o3-slave2
+
+...

@@ -1,0 +1,16 @@
+---
+
+- name: provision common baseline
+  hosts: all
+  become: yes
+  roles:
+    - common
+
+- name: provision hdfs and yarn
+  hosts: all
+  become: yes
+  become_user: hadoop
+  roles:
+    - hadoop
+
+...

@@ -1,0 +1,138 @@
+---
+
+- name: add o3 routing to /etc/hosts
+  blockinfile:
+    path: /etc/hosts
+    insertbefore: BOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK o3-common"
+    block: "{{ etc_hosts_routing }}"
+    state: "{{ 'present' if etc_hosts_routing else 'absent' }}"
+  tags: common
+
+- name: create hadoop user
+  user:
+    name: hadoop
+    uid: 1001
+    comment: "Cluster user"
+    shell: /bin/bash
+  tags: common
+
+- name: better bash history for 'hadoop' user
+  blockinfile:
+    dest: /home/hadoop/.bashrc
+    owner: hadoop
+    group: hadoop
+    mode: 0644
+    marker: "# {mark} ANSIBLE MANAGED BLOCK o3-common"
+    block: |
+      HISTFILESIZE=20000
+      HISTSIZE=10000
+      HISTTIMEFORMAT='%y-%m-%dT%T  '
+  tags: common
+
+- name: set up authorized_keys for hadoop user
+  authorized_key: user=hadoop key="{{ item }}"
+  with_file:
+    - public_keys/hadoop_id_rsa.pub
+    - public_keys/mblomdahl_id_rsa.pub
+  tags: common
+
+- name: add private key for hadoop user
+  copy:
+    dest: /home/hadoop/.ssh/id_rsa
+    content: "{{ hadoop_id_rsa }}"
+    owner: hadoop
+    group: hadoop
+    mode: 0600
+  tags: common
+
+- name: add public key for hadoop user
+  copy:
+    src: public_keys/hadoop_id_rsa.pub
+    dest: /home/hadoop/.ssh/id_rsa.pub
+    owner: hadoop
+    group: hadoop
+    mode: 0644
+  tags: common
+
+- name: add ssh config for hadoop user
+  copy:
+    dest: /home/hadoop/.ssh/config
+    content: |
+      Host 0.0.0.0 o3-*
+        StrictHostKeyChecking no
+        UserKnownHostsFile=/dev/null
+        LogLevel ERROR
+    owner: hadoop
+    group: hadoop
+  tags: common
+
+- name: install jdk 8 (ubuntu)
+  apt:
+    name: openjdk-8-jdk-headless
+    cache_valid_time: 86400
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+  tags: common
+
+- name: install jdk 8 (centos)
+  yum:
+    name: java-1.8.0-openjdk-devel
+    state: present
+  when: ansible_distribution == 'CentOS'
+  tags: common
+
+- name: extract hadoop tarball
+  unarchive:
+    src: resources/hadoop-2.9.2.tar.gz
+    dest: /home/hadoop/
+    remote_src: no
+    creates: /home/hadoop/hadoop-2.9.2
+  become: yes
+  become_user: hadoop
+  tags: common
+
+- name: symlink hadoop to hadoop-2.9.2
+  file:
+    src: /home/hadoop/hadoop-2.9.2
+    dest: /home/hadoop/hadoop
+    state: link
+  become: yes
+  become_user: hadoop
+  tags: common
+
+- name: correct bash profile misnaming on centos
+  file:
+    path: /home/hadoop/.profile
+    state: absent
+  when: ansible_distribution == 'CentOS'
+  tags: common
+
+- name: add hadoop binaries to path and set JAVA_HOME
+  blockinfile:
+    path: /home/hadoop/{{ bash_profile_file }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK o3-common"
+    block: |
+      PATH=/home/hadoop/hadoop/bin:/home/hadoop/hadoop/sbin:$PATH
+      export JAVA_HOME={{ java_home }}
+    create: yes
+    state: present
+  become: yes
+  become_user: hadoop
+  tags: common
+
+- name: set JAVA_HOME in ~/hadoop/etc/hadoop/hadoop-env.sh
+  lineinfile:
+    path: /home/hadoop/hadoop/etc/hadoop/hadoop-env.sh
+    regexp: '^export JAVA_HOME='
+    line: export JAVA_HOME={{ java_home }}
+  become: yes
+  become_user: hadoop
+  tags: common
+
+- name: add firewalld port openings
+  include: firewall-update.yml
+  when: ansible_distribution == 'CentOS'
+  tags: common, firewalld
+
+...
