@@ -81,4 +81,52 @@
   when: ansible_distribution == 'CentOS'
   tags: common
 
+- name: extract hadoop tarball
+  unarchive:
+    src: resources/hadoop-2.9.2.tar.gz
+    dest: /home/hadoop/
+    remote_src: no
+    creates: /home/hadoop/hadoop-2.9.2
+  become: yes
+  become_user: hadoop
+  tags: common
+
+- name: symlink hadoop to hadoop-2.9.2
+  file:
+    src: /home/hadoop/hadoop-2.9.2
+    dest: /home/hadoop/hadoop
+    state: link
+  become: yes
+  become_user: hadoop
+  tags: common
+
+- name: correct bash profile misnaming on centos
+  file:
+    path: /home/hadoop/.profile
+    state: absent
+  when: ansible_distribution == 'CentOS'
+  tags: common
+
+- name: add hadoop binaries to path and set JAVA_HOME
+  blockinfile:
+    path: /home/hadoop/{{ bash_profile_file }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK o3-common"
+    block: |
+      PATH=/home/hadoop/hadoop/bin:/home/hadoop/hadoop/sbin:$PATH
+      export JAVA_HOME={{ java_home }}
+    create: yes
+    state: present
+  become: yes
+  become_user: hadoop
+  tags: common
+
+- name: set JAVA_HOME in ~/hadoop/etc/hadoop/hadoop-env.sh
+  lineinfile:
+    path: /home/hadoop/hadoop/etc/hadoop/hadoop-env.sh
+    regexp: '^export JAVA_HOME='
+    line: export JAVA_HOME={{ java_home }}
+  become: yes
+  become_user: hadoop
+  tags: common
+
 ...
