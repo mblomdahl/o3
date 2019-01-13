@@ -17,4 +17,8 @@
 <!-- Put site-specific property overrides in this file. -->
 
 <configuration>
+    <property>
+        <name>fs.default.name</name>
+        <value>hdfs://o3-master:9000</value>
+    </property>
 </configuration>
