@@ -16,6 +16,19 @@
     shell: /bin/bash
   tags: common
 
+- name: better bash history for 'hadoop' user
+  blockinfile:
+    dest: /home/hadoop/.bashrc
+    owner: hadoop
+    group: hadoop
+    mode: 0644
+    marker: "# {mark} ANSIBLE MANAGED BLOCK o3-common"
+    block: |
+      HISTFILESIZE=20000
+      HISTSIZE=10000
+      HISTTIMEFORMAT='%y-%m-%dT%T  '
+  tags: common
+
 - name: set up authorized_keys for hadoop user
   authorized_key: user=hadoop key="{{ item }}"
   with_file:
