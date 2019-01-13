@@ -12,8 +12,22 @@
   See the License for the specific language governing permissions and
   limitations under the License. See accompanying LICENSE file.
 -->
+
+<!-- Site specific YARN configuration properties -->
+
 <configuration>
+    <property>
+        <name>yarn.acl.enable</name>
+        <value>0</value>
+    </property>
 
-    <!-- Site specific YARN configuration properties -->
+    <property>
+        <name>yarn.resourcemanager.hostname</name>
+        <value>o3-master</value>
+    </property>
 
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
 </configuration>
