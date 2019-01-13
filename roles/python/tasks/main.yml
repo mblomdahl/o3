@@ -1,7 +1,7 @@
 ---
 
 - block:
-    - name: install python3-pip and python3-venv
+    - name: install python-pip, python3-pip and python3-venv
       apt:
         name: ['python3-pip', 'python3-venv']
         state: present
@@ -26,25 +26,56 @@
   when: ansible_distribution == 'Ubuntu'
 
 - block:
+    - name: epel repo
+      yum_repository:
+        name: epel
+        description: EPEL YUM repo
+        baseurl: http://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+        gpgkey: http://download.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-$releasever
+      tags: python
+
+    - name: install epel-release
+      yum:
+        name: epel-release
+        state: present
+      tags: python
+
+    - name: install python-pip
+      yum:
+        name: python-pip
+        state: present
+      tags: python
+
+    - name: install pip-18.1
+      pip:
+        name: pip
+        version: 18.1
+        state: present
+      tags: python
+
     - name: install centos-release-scl
       yum:
         name: centos-release-scl
         state: present
+      tags: python
 
     - name: install rh-python36
       yum:
         name: rh-python36
         state: present
+      tags: python
 
     - name: install scl pip-18.1
       shell: scl enable rh-python36 "pip install pip==18.1"
       register: rhel7_pip_install
       changed_when: rhel7_pip_install.stdout.find('already satisfied') == -1
+      tags: python
 
     - name: install scl virtualenv-16.2.0
       shell: scl enable rh-python36 "pip install virtualenv==16.2.0"
       register: rhel7_virtualenv_install
       changed_when: rhel7_virtualenv_install.stdout.find('already satisfied') == -1
+      tags: python
 
   when: ansible_distribution == 'CentOS'
 
