@@ -45,7 +45,7 @@
       ignore_errors: yes
       tags: hdfs
 
-    - name: start dfs if not already running (ui port 50070)
+    - name: start dfs if not already running (ui ports 50070 & 50075)
       shell: /home/hadoop/hadoop/sbin/start-dfs.sh
       when: assert_jps_namenode_running is failed
       tags: hdfs
@@ -60,6 +60,19 @@
     - name: create dfs /user/hadoop dir
       shell: /home/hadoop/hadoop/bin/hdfs dfs -mkdir -p /user/hadoop
       when: assert_user_hadoop_dir_exists is failed
+      tags: hdfs
+
+    - name: assert yarn is running
+      shell: jps
+      register: assert_jps_resourcemanager_running
+      changed_when: no
+      failed_when: "'ResourceManager' not in assert_jps_resourcemanager_running.stdout"
+      ignore_errors: yes
+      tags: hdfs
+
+    - name: start yarn if not already running (ui ports 8088 and 8042)
+      shell: /home/hadoop/hadoop/sbin/start-yarn.sh
+      when: assert_jps_resourcemanager_running is failed
       tags: hdfs
 
   when: "'master-nodes' in group_names"
