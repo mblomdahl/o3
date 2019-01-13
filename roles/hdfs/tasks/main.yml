@@ -32,4 +32,12 @@
   become_user: hadoop
   tags: hdfs
 
+- name: configure hadoop slaves list
+  template:
+    src: slaves.j2
+    dest: /home/hadoop/hadoop/etc/hadoop/slaves
+  become: yes
+  become_user: hadoop
+  tags: hdfs
+
 ...
