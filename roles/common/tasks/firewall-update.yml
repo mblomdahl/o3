@@ -1,0 +1,112 @@
+---
+
+- set_fact:
+    host_subnet_cidr: "{{ (ansible_default_ipv4.network + '/' + ansible_default_ipv4.netmask) | ipaddr('net') }}"
+
+- block:
+    - name: allow traffic to hdfs namenode port 9000 from external dmz and subnet
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=9000 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
+    - name: allow traffic to hdfs namenode ui port 50070 from external dmz and subnet
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=50070 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
+    - name: allow traffic to hdfs secondary namenode port 50090 from subnet
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ host_subnet_cidr }} port port=50090 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+
+    - name: allow traffic to yarn resourcemanager ui port 8088 from external dmz and subnet
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8088 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
+    - name: allow traffic to yarn resourcemanager port 8050 from external dmz and subnet
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8050 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
+    - name: allow traffic to yarn resourcemanager tracker port 8025 from external dmz and subnet
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8025 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
+    - name: allow traffic to yarn resourcemanager scheduler port 8030 from external dmz and subnet
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8030 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
+    - name: allow traffic to yarn resourcemanager admin port 8141 from external dmz and subnet
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8141 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
+    - name: allow traffic to yarn job history service ui port 19888 from external dmz and subnet
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=19888 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
+  when: "'master-nodes' in group_names"
+
+- name: allow traffic to hdfs datanode ports 50010, 50020 from subnet
+  firewalld:
+    rich_rule: 'rule family=ipv4 source address={{ host_subnet_cidr }} port port={{ item }} protocol=tcp accept'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items: [50010, 50020]
+
+- name: allow traffic to hdfs datanode ui port 50075 from external dmz and subnet
+  firewalld:
+    rich_rule: 'rule family=ipv4 source address={{ item }} port port=50075 protocol=tcp accept'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
+- name: allow traffic to yarn nodemanager ui port 8042 from external dmz and subnet
+  firewalld:
+    rich_rule: 'rule family=ipv4 source address={{ item }} port port=8042 protocol=tcp accept'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
+- name: allow traffic to yarn nodemanager port 45454 from external dmz and subnet
+  firewalld:
+    rich_rule: 'rule family=ipv4 source address={{ item }} port port=45454 protocol=tcp accept'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
+...
