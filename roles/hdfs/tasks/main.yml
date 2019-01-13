@@ -4,40 +4,64 @@
   copy:
     src: core-site.xml
     dest: /home/hadoop/hadoop/etc/hadoop/core-site.xml
-  become: yes
-  become_user: hadoop
   tags: hdfs
 
 - name: configure hadoop hdfs-site.xml
   copy:
     src: hdfs-site.xml
     dest: /home/hadoop/hadoop/etc/hadoop/hdfs-site.xml
-  become: yes
-  become_user: hadoop
   tags: hdfs
 
 - name: configure hadoop mapred-site.xml
   copy:
     src: mapred-site.xml
     dest: /home/hadoop/hadoop/etc/hadoop/mapred-site.xml
-  become: yes
-  become_user: hadoop
   tags: hdfs
 
 - name: configure hadoop yarn-site.xml
   copy:
     src: yarn-site.xml
     dest: /home/hadoop/hadoop/etc/hadoop/yarn-site.xml
-  become: yes
-  become_user: hadoop
   tags: hdfs
 
 - name: configure hadoop slaves list
   template:
     src: slaves.j2
     dest: /home/hadoop/hadoop/etc/hadoop/slaves
-  become: yes
-  become_user: hadoop
   tags: hdfs
+
+- block:
+    - name: format hdfs namenode
+      shell: /home/hadoop/hadoop/bin/hdfs namenode -format -nonInteractive
+      args:
+        creates: /home/hadoop/data/nameNode/current/VERSION
+      tags: hdfs
+
+    - name: assert dfs is running
+      shell: jps
+      register: assert_jps_namenode_running
+      changed_when: no
+      failed_when: "'NameNode' not in assert_jps_namenode_running.stdout"
+      ignore_errors: yes
+      tags: hdfs
+
+    - name: start dfs if not already running (ui port 50070)
+      shell: /home/hadoop/hadoop/sbin/start-dfs.sh
+      when: assert_jps_namenode_running is failed
+      tags: hdfs
+
+    - name: assert dfs /user/hadoop dir exists
+      shell: /home/hadoop/hadoop/bin/hdfs dfs -ls /user/hadoop
+      register: assert_user_hadoop_dir_exists
+      changed_when: no
+      ignore_errors: yes
+      tags: hdfs
+
+    - name: create dfs /user/hadoop dir
+      shell: /home/hadoop/hadoop/bin/hdfs dfs -mkdir -p /user/hadoop
+      when: assert_user_hadoop_dir_exists is failed
+      tags: hdfs
+
+  when: "'master-nodes' in group_names"
 
 ...

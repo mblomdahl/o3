@@ -58,7 +58,7 @@
   copy:
     dest: /home/hadoop/.ssh/config
     content: |
-      Host o3-*
+      Host 0.0.0.0 o3-*
         StrictHostKeyChecking no
         UserKnownHostsFile=/dev/null
         LogLevel ERROR
