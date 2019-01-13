@@ -1,6 +1,7 @@
 ---
 
-- set_fact:
+- name: find subnet cidr
+  set_fact:
     host_subnet_cidr: "{{ (ansible_default_ipv4.network + '/' + ansible_default_ipv4.netmask) | ipaddr('net') }}"
 
 - block:
@@ -35,17 +36,17 @@
         state: enabled
       with_items: "{{ external_dmz + [host_subnet_cidr] }}"
 
-    - name: allow traffic to yarn resourcemanager port 8050 from external dmz and subnet
+    - name: allow traffic to yarn resourcemanager port 8032 from external dmz and subnet
       firewalld:
-        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8050 protocol=tcp accept'
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8032 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled
       with_items: "{{ external_dmz + [host_subnet_cidr] }}"
 
-    - name: allow traffic to yarn resourcemanager tracker port 8025 from external dmz and subnet
+    - name: allow traffic to yarn resourcemanager tracker port 8031 from external dmz and subnet
       firewalld:
-        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8025 protocol=tcp accept'
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8031 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled
@@ -59,9 +60,9 @@
         state: enabled
       with_items: "{{ external_dmz + [host_subnet_cidr] }}"
 
-    - name: allow traffic to yarn resourcemanager admin port 8141 from external dmz and subnet
+    - name: allow traffic to yarn resourcemanager admin port 8033 from external dmz and subnet
       firewalld:
-        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8141 protocol=tcp accept'
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8033 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled

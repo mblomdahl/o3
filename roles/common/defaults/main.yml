@@ -1,5 +1,7 @@
 ---
 
+external_dmz: []
+
 etc_hosts_routing:
 
 hadoop_id_rsa: !vault |

@@ -3,6 +3,7 @@
 - name: add o3 routing to /etc/hosts
   blockinfile:
     path: /etc/hosts
+    insertbefore: BOF
     marker: "# {mark} ANSIBLE MANAGED BLOCK o3-common"
     block: "{{ etc_hosts_routing }}"
     state: "{{ 'present' if etc_hosts_routing else 'absent' }}"
@@ -128,5 +129,10 @@
   become: yes
   become_user: hadoop
   tags: common
+
+- name: add firewalld port openings
+  include: firewall-update.yml
+  when: ansible_distribution == 'CentOS'
+  tags: common, firewalld
 
 ...
