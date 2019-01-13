@@ -1,0 +1,17 @@
+[core]
+executor = LocalExecutor
+sql_alchemy_conn = postgresql+psycopg2://[USER]@[INSTANCE/SERVERNAME]:[PASSWORD]@[HOSTNAME]/[DATABASENAME]
+
+sql_alchemy_pool_size = 10
+sql_alchemy_pool_recycle = 3600
+
+load_examples = False
+dags_are_paused_at_creation = True
+
+[webserver]
+endpoint_url = http://localhost:9999
+base_url = http://localhost:9999
+catchup_by_default = False
+
+[email]
+email_backend = hdl.airflow.sendgrid.send_email

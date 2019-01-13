@@ -13,4 +13,10 @@
   roles:
     - hadoop
 
+- name: provision airflow
+  hosts: master-nodes
+  become: yes
+  roles:
+    - airflow
+
 ...

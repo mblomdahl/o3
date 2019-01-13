@@ -1,0 +1,49 @@
+---
+
+- name: create airflow user
+  user:
+    name: airflow
+    uid: 1002
+    comment: "Airflow user"
+    shell: /bin/bash
+  tags: airflow
+
+- name: create ~/airflow_home directory structure
+  file:
+    path: /home/airflow/{{ item }}
+    state: directory
+  with_items:
+    - airflow_home
+    - airflow_home/dags
+    - airflow_home/logs
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: template airflow config
+  template:
+    src: airflow.cfg.j2
+    dest: /home/airflow/airflow_home/airflow.cfg
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: create airflow python3 virtualenv (Ubuntu)
+  shell: python3 -m venv /home/airflow/pyenv
+  args:
+    creates: /home/airflow/pyenv
+  become: yes
+  become_user: airflow
+  when: ansible_distribution == 'Ubuntu'
+  tags: airflow
+
+- name: create airflow python3 virtualenv (CentOS)
+  shell: scl enable rh-python36 'python3 -m venv /home/airflow/pyenv'
+  args:
+    creates: /home/airflow/pyenv
+  become: yes
+  become_user: airflow
+  when: ansible_distribution == 'CentOS'
+  tags: airflow
+
+...
