@@ -73,6 +73,22 @@
       tags: airflow
 
   when: ansible_distribution == 'CentOS'
+
+- name: start postgres database
+  docker_container:
+    name: postgres
+    image: postgres:9
+    state: started
+    restart_policy: unless-stopped
+    volume_driver: local
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    env:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: hdl
+      POSTGRES_PASSWORD: hdl
   tags: airflow
 
 ...
