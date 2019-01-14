@@ -74,6 +74,25 @@
 
   when: ansible_distribution == 'CentOS'
 
+- name: template airflow-environment
+  template:
+    src: environment.j2
+    dest: /home/airflow/airflow-environment
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: source airflow-environment in .bashrc
+  blockinfile:
+    path: /home/airflow/.bashrc
+    marker: "# {mark} ANSIBLE MANAGED BLOCK o3-airflow"
+    block: |
+      set -a
+      source /home/airflow/airflow-environment
+  become: yes
+  become_user: airflow
+  tags: airflow
+
 - name: start postgres database
   docker_container:
     name: postgres
