@@ -14,3 +14,13 @@ Development Environment
     python3 -m venv venv && source venv/bin/activate
     pip install -r requirements.txt
 
+
+Windows VirtualEnv
+------------------
+
+To support installing all the pip requirements for PyCharm development under Windows, create a Docker image and
+[configure the IDE with it](https://www.jetbrains.com/help/pycharm/using-docker-as-a-remote-interpreter.html). E.g.
+
+    docker build -t mblomdahl/o3-venv .
+    docker run -it mblomdahl/o3-venv pip freeze
+
