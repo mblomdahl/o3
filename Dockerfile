@@ -5,4 +5,8 @@ ADD requirements.txt .
 
 RUN pip install -r requirements.txt
 
+WORKDIR /work
+
+VOLUME /work
+
 CMD /usr/bin/python3
