@@ -1,7 +1,9 @@
 alembic==0.8.10
 ansible==2.7.5
 apache-airflow==1.9.0
+appnope==0.1.0
 asn1crypto==0.24.0
+backcall==0.1.0
 bcrypt==3.1.5
 bitarray==0.8.3
 bleach==2.1.2
@@ -12,6 +14,7 @@ Click==7.0
 configparser==3.5.0
 croniter==0.3.26
 cryptography==2.4.2
+decorator==4.3.0
 dill==0.2.8.2
 docutils==0.14
 Flask==0.11.1
@@ -29,7 +32,10 @@ hive-thrift-py==0.0.1
 html5lib==1.0.1
 idna==2.8
 impyla==0.14.1
+ipython==7.2.0
+ipython-genutils==0.2.0
 itsdangerous==1.1.0
+jedi==0.13.2
 Jinja2==2.8.1
 lockfile==0.12.2
 lxml==3.8.0
@@ -41,10 +47,15 @@ numpy==1.15.4
 ordereddict==1.1
 pandas==0.23.4
 paramiko==2.4.2
+parso==0.3.1
+pexpect==4.6.0
+pickleshare==0.7.5
 ply==3.11
+prompt-toolkit==2.0.7
 protobuf==3.6.1
 psutil==4.4.2
 psycopg2==2.7.6.1
+ptyprocess==0.6.0
 pyasn1==0.4.5
 pycparser==2.19
 Pygments==2.3.1
@@ -66,9 +77,11 @@ SQLAlchemy==1.2.16
 tabulate==0.7.7
 thrift==0.11.0
 thriftpy==0.3.9
+traitlets==4.3.2
 unicodecsv==0.14.1
 Unidecode==1.0.23
 urllib3==1.24.1
+wcwidth==0.1.7
 webencodings==0.5.1
 Werkzeug==0.14.1
 WTForms==2.2.1
