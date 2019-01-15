@@ -71,7 +71,7 @@
 
 - name: upload pip requirements.txt
   copy:
-    src: requirements.txt
+    src: config/pip_requirements.txt
     dest: /home/airflow/requirements.txt
   become: yes
   become_user: airflow
@@ -150,5 +150,30 @@
       POSTGRES_USER: hdl
       POSTGRES_PASSWORD: hdl
   tags: airflow
+
+- name: template airflow services
+  template:
+    src: airflow-{{ item }}.service.j2
+    dest: /etc/systemd/system/airflow-{{ item }}.service
+  with_items:
+    - webserver
+    - scheduler
+  register: add_airflow_services
+  tags: airflow, systemd
+
+- name: run daemon-reload
+  shell: systemctl daemon-reload
+  when: add_airflow_services is changed
+  tags: airflow, systemd
+
+- name: set airflow services to running and auto-starting
+  service:
+    name: airflow-{{ item }}
+    state: started
+    enabled: yes
+  with_items:
+    - webserver
+    - scheduler
+  tags: airflow, systemd
 
 ...
