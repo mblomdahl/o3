@@ -20,10 +20,51 @@
   become_user: airflow
   tags: airflow
 
+- name: symlink ~/airflow_home/dags/airflow -> ~/hdl/current/hdl/airflow/dags
+  file:
+    src: /home/airflow/hdl/current/hdl/airflow/dags
+    dest: /home/airflow/airflow_home/dags/airflow
+    state: link
+    force: yes
+  become: yes
+  become_user: airflow
+  tags: airflow
+
 - name: template airflow config
   template:
     src: airflow.cfg.j2
     dest: /home/airflow/airflow_home/airflow.cfg
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: create directory structure for hdl code
+  file:
+    path: /home/airflow/{{ item }}
+    state: directory
+  with_items:
+    - hdl
+    - hdl/releases
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: symlink ~/hdl/current -> ~/hdl/releases/o3
+  file:
+    src: /home/airflow/hdl/releases/o3
+    dest: /home/airflow/hdl/current
+    state: link
+    force: yes
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: checkout code base
+  git:
+    repo: https://github.com/mblomdahl/o3.git
+    version: feature/airflow
+    dest: /home/airflow/hdl/releases/o3
+    accept_hostkey: yes
   become: yes
   become_user: airflow
   tags: airflow
