@@ -8,6 +8,14 @@
     shell: /bin/bash
   tags: airflow
 
+- name: ensure airflow owns everything under home dir
+  file:
+    path: /home/airflow
+    owner: airflow
+    group: airflow
+    recurse: yes
+  tags: airflow
+
 - name: create ~/airflow_home directory structure
   file:
     path: /home/airflow/{{ item }}
