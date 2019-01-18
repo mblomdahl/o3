@@ -4,134 +4,127 @@
   set_fact:
     host_subnet_cidr: "{{ (ansible_default_ipv4.network + '/' + ansible_default_ipv4.netmask) | ipaddr('net') }}"
 
+- name: allow all traffic from subnet {{ host_subnet_cidr }}
+  firewalld:
+    rich_rule: 'rule family=ipv4 source address={{ host_subnet_cidr }} accept'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when: "host_subnet_cidr | ipaddr('private')"
+
 - block:
-    - name: allow traffic to airflow port 8080 from external dmz and subnet
+    - name: allow traffic to airflow port 8080 from external dmz
       firewalld:
         rich_rule: 'rule family=ipv4 source address={{ item }} port port=8080 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+      with_items: "{{ external_dmz }}"
 
-    - name: allow traffic to hdfs namenode port 9000 from external dmz and subnet
+    - name: allow traffic to hdfs namenode port 9000 from external dmz
       firewalld:
         rich_rule: 'rule family=ipv4 source address={{ item }} port port=9000 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+      with_items: "{{ external_dmz }}"
 
-    - name: allow traffic to hdfs namenode ui port 50070 from external dmz and subnet
+    - name: allow traffic to hdfs namenode ui port 50070 from external dmz
       firewalld:
         rich_rule: 'rule family=ipv4 source address={{ item }} port port=50070 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+      with_items: "{{ external_dmz }}"
 
-    - name: allow traffic to hdfs secondary namenode port 50090 from subnet
-      firewalld:
-        rich_rule: 'rule family=ipv4 source address={{ host_subnet_cidr }} port port=50090 protocol=tcp accept'
-        permanent: yes
-        immediate: yes
-        state: enabled
-
-    - name: allow traffic to yarn resourcemanager ui port 8088 from external dmz and subnet
+    - name: allow traffic to yarn resourcemanager ui port 8088 from external dmz
       firewalld:
         rich_rule: 'rule family=ipv4 source address={{ item }} port port=8088 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+      with_items: "{{ external_dmz }}"
 
-    - name: allow traffic to yarn resourcemanager port 8032 from external dmz and subnet
+    - name: allow traffic to yarn resourcemanager port 8032 from external dmz
       firewalld:
         rich_rule: 'rule family=ipv4 source address={{ item }} port port=8032 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+      with_items: "{{ external_dmz }}"
 
-    - name: allow traffic to yarn resourcemanager tracker port 8031 from external dmz and subnet
+    - name: allow traffic to yarn resourcemanager tracker port 8031 from external dmz
       firewalld:
         rich_rule: 'rule family=ipv4 source address={{ item }} port port=8031 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+      with_items: "{{ external_dmz }}"
 
-    - name: allow traffic to yarn resourcemanager scheduler port 8030 from external dmz and subnet
+    - name: allow traffic to yarn resourcemanager scheduler port 8030 from external dmz
       firewalld:
         rich_rule: 'rule family=ipv4 source address={{ item }} port port=8030 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+      with_items: "{{ external_dmz }}"
 
-    - name: allow traffic to yarn resourcemanager admin port 8033 from external dmz and subnet
+    - name: allow traffic to yarn resourcemanager admin port 8033 from external dmz
       firewalld:
         rich_rule: 'rule family=ipv4 source address={{ item }} port port=8033 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+      with_items: "{{ external_dmz }}"
 
-    - name: allow traffic to yarn job history service ui port 19888 from external dmz and subnet
+    - name: allow traffic to yarn job history service ui port 19888 from external dmz
       firewalld:
         rich_rule: 'rule family=ipv4 source address={{ item }} port port=19888 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+      with_items: "{{ external_dmz }}"
 
-    - name: allow traffic to spark driver web ui port 4040 from external dmz and subnet
-      firewalld:
-        rich_rule: 'rule family=ipv4 source address={{ item }} port port=4040 protocol=tcp accept'
-        permanent: yes
-        immediate: yes
-        state: enabled
-      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
-
-    - name: allow traffic to spark history server ui port 18080 from external dmz and subnet
+    - name: allow traffic to spark history server ui port 18080 from external dmz
       firewalld:
         rich_rule: 'rule family=ipv4 source address={{ item }} port port=18080 protocol=tcp accept'
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+      with_items: "{{ external_dmz }}"
 
   when: "'master-nodes' in group_names"
 
-- name: allow traffic to hdfs datanode ports 50010, 50020 from subnet
-  firewalld:
-    rich_rule: 'rule family=ipv4 source address={{ host_subnet_cidr }} port port={{ item }} protocol=tcp accept'
-    permanent: yes
-    immediate: yes
-    state: enabled
-  with_items: [50010, 50020]
-
-- name: allow traffic to hdfs datanode ui port 50075 from external dmz and subnet
+- name: allow traffic to hdfs datanode ui port 50075 from external dmz
   firewalld:
     rich_rule: 'rule family=ipv4 source address={{ item }} port port=50075 protocol=tcp accept'
     permanent: yes
     immediate: yes
     state: enabled
-  with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+  with_items: "{{ external_dmz }}"
 
-- name: allow traffic to yarn nodemanager ui port 8042 from external dmz and subnet
+- name: allow traffic to yarn nodemanager ui port 8042 from external dmz
   firewalld:
     rich_rule: 'rule family=ipv4 source address={{ item }} port port=8042 protocol=tcp accept'
     permanent: yes
     immediate: yes
     state: enabled
-  with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+  with_items: "{{ external_dmz }}"
 
-- name: allow traffic to yarn nodemanager port 45454 from external dmz and subnet
+- name: allow traffic to yarn nodemanager port 45454 from external dmz
   firewalld:
     rich_rule: 'rule family=ipv4 source address={{ item }} port port=45454 protocol=tcp accept'
     permanent: yes
     immediate: yes
     state: enabled
-  with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+  with_items: "{{ external_dmz }}"
+
+- name: allow traffic to spark driver web ui port 4040 from external dmz
+  firewalld:
+    rich_rule: 'rule family=ipv4 source address={{ item }} port port=4040 protocol=tcp accept'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items: "{{ external_dmz }}"
 
 ...
