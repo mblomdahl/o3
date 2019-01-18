@@ -69,14 +69,6 @@
   become_user: airflow
   tags: airflow
 
-- name: upload pip requirements.txt
-  copy:
-    src: config/pip_requirements.txt
-    dest: /home/airflow/requirements.txt
-  become: yes
-  become_user: airflow
-  tags: airflow
-
 - block:
     - name: create airflow python3 virtualenv (Ubuntu)
       shell: python3 -m venv /home/airflow/pyenv
@@ -87,11 +79,12 @@
       tags: airflow
 
     - name: install pip requirements.txt (Ubuntu)
-      pip:
-        requirements: /home/airflow/requirements.txt
-        virtualenv: /home/airflow/pyenv
+      shell: SLUGIFY_USES_TEXT_UNIDECODE=yes /home/airflow/pyenv/bin/pip install
+             -r /home/airflow/hdl/current/requirements.txt
       become: yes
       become_user: airflow
+      register: pyenv_pip_install_requirements
+      changed_when: "'Successfully built' in pyenv_pip_install_requirements.stdout"
       tags: airflow
 
   when: ansible_distribution == 'Ubuntu'
@@ -106,7 +99,8 @@
       tags: airflow
 
     - name: install pip requirements (CentOS)
-      shell: scl enable rh-python36 '/home/airflow/pyenv/bin/pip install -r /home/airflow/requirements.txt'
+      shell: scl enable rh-python36 'SLUGIFY_USES_TEXT_UNIDECODE=yes
+             /home/airflow/pyenv/bin/pip install -r /home/airflow/hdl/current/requirements.txt'
       become: yes
       become_user: airflow
       register: scl_pip_install_requirements
