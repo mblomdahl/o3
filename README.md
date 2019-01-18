@@ -24,3 +24,9 @@ To support installing all the pip requirements for PyCharm development under Win
     docker build -t mblomdahl/o3-venv .
     docker run -it mblomdahl/o3-venv pip freeze
 
+
+Links
+-----
+
+* https://www.linode.com/docs/databases/hadoop/how-to-install-and-set-up-hadoop-cluster/
+
