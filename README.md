@@ -31,3 +31,5 @@ Links
 
 * https://www.linode.com/docs/databases/hadoop/how-to-install-and-set-up-hadoop-cluster/
 
+* https://www.linode.com/docs/databases/hadoop/install-configure-run-spark-on-top-of-hadoop-yarn-cluster/
+

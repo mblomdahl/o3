@@ -84,6 +84,22 @@
         state: enabled
       with_items: "{{ external_dmz + [host_subnet_cidr] }}"
 
+    - name: allow traffic to spark driver web ui port 4040 from external dmz and subnet
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=4040 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
+    - name: allow traffic to spark history server ui port 18080 from external dmz and subnet
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=18080 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
   when: "'master-nodes' in group_names"
 
 - name: allow traffic to hdfs datanode ports 50010, 50020 from subnet
