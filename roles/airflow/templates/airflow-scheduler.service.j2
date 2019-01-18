@@ -10,7 +10,7 @@ Type=simple
 {% if ansible_distribution == 'Ubuntu' %}
 ExecStart=/bin/bash -c 'source /home/airflow/pyenv/bin/activate; airflow scheduler'
 {% elif ansible_distribution == 'CentOS' %}
-ExecStart=/bin/bash -c 'scl enable rh-python36 'source /home/airflow/pyenv/bin/activate; airflow scheduler'"
+ExecStart=/bin/bash -c 'scl enable rh-python36 'source /home/airflow/pyenv/bin/activate; airflow scheduler'
 {% endif %}
 Restart=always
 RestartSec=5s
