@@ -68,6 +68,7 @@
   become: yes
   become_user: airflow
   notify:
+    - airflow initdb
     - restart airflow-webserver
     - restart airflow-scheduler
   tags: airflow

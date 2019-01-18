@@ -1,5 +1,11 @@
 ---
 
+- name: airflow initdb
+  shell: source /home/airflow/airflow-environment && source /home/airflow/pyenv/bin/activate &&
+         airflow initdb
+  become: yes
+  become_user: airflow
+
 - name: restart airflow-webserver
   service:
     name: airflow-webserver
