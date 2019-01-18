@@ -160,7 +160,7 @@
   become_user: hadoop
   tags: common
 
-- name: set JAVA_HOME in ~/hadoop/etc/hadoop/hadoop-env.sh
+- name: set JAVA_HOME in /usr/local/hadoop-2.9.2/etc/hadoop/hadoop-env.sh
   lineinfile:
     path: /usr/local/hadoop-2.9.2/etc/hadoop/hadoop-env.sh
     regexp: '^export JAVA_HOME='
