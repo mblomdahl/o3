@@ -15,6 +15,21 @@
     recurse: yes
   tags: airflow
 
+- name: assert dfs /user/airflow dir exists
+  shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -ls /user/airflow
+  register: assert_user_airflow_dir_exists
+  changed_when: no
+  ignore_errors: yes
+  tags: airflow
+
+- name: create dfs /user/airflow dir
+  shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -mkdir -p /user/airflow &&
+         /usr/local/hadoop-2.9.2/bin/hdfs dfs -chown airflow:supergroup /user/airflow
+  when: assert_user_airflow_dir_exists is failed
+  become: yes
+  become_user: hadoop
+  tags: airflow
+
 - name: better bash history for 'airflow' user
   blockinfile:
     dest: /home/airflow/.bashrc
