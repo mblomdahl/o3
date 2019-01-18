@@ -1,5 +1,5 @@
 [Unit]
-Description=Airflow scheduler daemon
+Description=Airflow webserver daemon
 After=network.target
 
 [Service]
@@ -8,9 +8,9 @@ User=airflow
 Group=airflow
 Type=simple
 {% if ansible_distribution == 'Ubuntu' %}
-ExecStart=/bin/bash -c 'source /home/airflow/pyenv/bin/activate; airflow webserver -p 9999'
+ExecStart=/bin/bash -c 'source /home/airflow/pyenv/bin/activate; airflow webserver -p 8080'
 {% elif ansible_distribution == 'CentOS' %}
-ExecStart=/bin/bash -c 'scl enable rh-python36 'source /home/airflow/pyenv/bin/activate; airflow webserver -p 9999'"
+ExecStart=/bin/bash -c 'scl enable rh-python36 'source /home/airflow/pyenv/bin/activate; airflow webserver -p 8080'"
 {% endif %}
 Restart=always
 RestartSec=5s
