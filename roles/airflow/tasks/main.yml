@@ -3,7 +3,6 @@
 - name: create airflow user
   user:
     name: airflow
-    uid: 1002
     comment: "Airflow user"
     shell: /bin/bash
   tags: airflow
@@ -14,6 +13,19 @@
     owner: airflow
     group: airflow
     recurse: yes
+  tags: airflow
+
+- name: better bash history for 'airflow' user
+  blockinfile:
+    dest: /home/airflow/.bashrc
+    mode: 0644
+    marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-history"
+    block: |
+      HISTFILESIZE=20000
+      HISTSIZE=10000
+      HISTTIMEFORMAT='%y-%m-%dT%T  '
+  become: yes
+  become_user: airflow
   tags: airflow
 
 - name: create ~/airflow_home directory structure
@@ -141,7 +153,7 @@
 - name: source airflow-environment in .bashrc
   blockinfile:
     path: /home/airflow/.bashrc
-    marker: "# {mark} ANSIBLE MANAGED BLOCK o3-airflow"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-environment"
     block: |
       set -a
       source /home/airflow/airflow-environment
@@ -177,12 +189,12 @@
   notify:
     - restart airflow-webserver
     - restart airflow-scheduler
-  tags: airflow, systemd
+  tags: airflow
 
-- name: run daemon-reload
+- name: run daemon-reload on airflow services
   shell: systemctl daemon-reload
   when: add_airflow_services is changed
-  tags: airflow, systemd
+  tags: airflow
 
 - name: set airflow services to running and auto-starting
   service:
@@ -192,6 +204,6 @@
   with_items:
     - webserver
     - scheduler
-  tags: airflow, systemd
+  tags: airflow
 
 ...

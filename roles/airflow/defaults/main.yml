@@ -1,5 +1,7 @@
 ---
 
-env_name: DEV
+hdl_env_name: DEV
+
+source_branch: master
 
 ...
