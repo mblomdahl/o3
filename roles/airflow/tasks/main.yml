@@ -150,13 +150,15 @@
     - restart airflow-scheduler
   tags: airflow
 
-- name: source airflow-environment in .bashrc
+- name: source airflow-environment in .{{ bash_profile_file }}
   blockinfile:
-    path: /home/airflow/.bashrc
+    path: /home/airflow/{{ bash_profile_file }}
     marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-environment"
     block: |
       set -a
       source /home/airflow/airflow-environment
+      export PATH=/usr/local/hadoop-2.9.2/bin:/usr/local/hadoop-2.9.2/sbin:$PATH
+      export JAVA_HOME={{ java_home }}
   become: yes
   become_user: airflow
   tags: airflow
