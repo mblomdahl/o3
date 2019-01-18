@@ -12,15 +12,6 @@
   become_user: hadoop
   roles:
     - hadoop
-  tasks:
-    - name: remove legacy hadoop install paths
-      file:
-        path: /home/hadoop/{{ item }}
-        state: absent
-      with_items:
-        - hadoop-2.9.2
-        - hadoop
-      tags: hadoop
 
 - name: provision airflow
   hosts: master-nodes
