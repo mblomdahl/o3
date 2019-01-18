@@ -3,36 +3,36 @@
 - name: configure hadoop core-site.xml
   copy:
     src: core-site.xml
-    dest: /home/hadoop/hadoop/etc/hadoop/core-site.xml
+    dest: /usr/local/hadoop-2.9.2/etc/hadoop/core-site.xml
   tags: hadoop
 
 - name: configure hadoop hdfs-site.xml
   copy:
     src: hdfs-site.xml
-    dest: /home/hadoop/hadoop/etc/hadoop/hdfs-site.xml
+    dest: /usr/local/hadoop-2.9.2/etc/hadoop/hdfs-site.xml
   tags: hadoop
 
 - name: configure hadoop mapred-site.xml
   copy:
     src: mapred-site.xml
-    dest: /home/hadoop/hadoop/etc/hadoop/mapred-site.xml
+    dest: /usr/local/hadoop-2.9.2/etc/hadoop/mapred-site.xml
   tags: hadoop
 
 - name: configure hadoop yarn-site.xml
   copy:
     src: yarn-site.xml
-    dest: /home/hadoop/hadoop/etc/hadoop/yarn-site.xml
+    dest: /usr/local/hadoop-2.9.2/etc/hadoop/yarn-site.xml
   tags: hadoop
 
 - name: configure hadoop slaves list
   template:
     src: slaves.j2
-    dest: /home/hadoop/hadoop/etc/hadoop/slaves
+    dest: /usr/local/hadoop-2.9.2/etc/hadoop/slaves
   tags: hadoop
 
 - block:
     - name: format hdfs namenode
-      shell: /home/hadoop/hadoop/bin/hdfs namenode -format -nonInteractive
+      shell: /usr/local/hadoop-2.9.2/bin/hdfs namenode -format -nonInteractive
       args:
         creates: /home/hadoop/data/nameNode/current/VERSION
       tags: hadoop
@@ -46,19 +46,19 @@
       tags: hadoop
 
     - name: start dfs if not already running (ui ports 50070 & 50075)
-      shell: /home/hadoop/hadoop/sbin/start-dfs.sh
+      shell: /usr/local/hadoop-2.9.2/sbin/start-dfs.sh
       when: assert_jps_namenode_running is failed
       tags: hadoop
 
     - name: assert dfs /user/hadoop dir exists
-      shell: /home/hadoop/hadoop/bin/hdfs dfs -ls /user/hadoop
+      shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -ls /user/hadoop
       register: assert_user_hadoop_dir_exists
       changed_when: no
       ignore_errors: yes
       tags: hadoop
 
     - name: create dfs /user/hadoop dir
-      shell: /home/hadoop/hadoop/bin/hdfs dfs -mkdir -p /user/hadoop
+      shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -mkdir -p /user/hadoop
       when: assert_user_hadoop_dir_exists is failed
       tags: hadoop
 
@@ -71,7 +71,7 @@
       tags: hadoop
 
     - name: start yarn if not already running (ui ports 8088 and 8042)
-      shell: /home/hadoop/hadoop/sbin/start-yarn.sh
+      shell: /usr/local/hadoop-2.9.2/sbin/start-yarn.sh
       when: assert_jps_resourcemanager_running is failed
       tags: hadoop
 
