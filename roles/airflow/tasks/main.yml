@@ -67,6 +67,9 @@
     accept_hostkey: yes
   become: yes
   become_user: airflow
+  notify:
+    - restart airflow-webserver
+    - restart airflow-scheduler
   tags: airflow
 
 - block:
@@ -84,7 +87,10 @@
       become: yes
       become_user: airflow
       register: pyenv_pip_install_requirements
-      changed_when: "'Successfully built' in pyenv_pip_install_requirements.stdout"
+      changed_when: "'Successfully ' in pyenv_pip_install_requirements.stdout"
+      notify:
+        - restart airflow-webserver
+        - restart airflow-scheduler
       tags: airflow
 
   when: ansible_distribution == 'Ubuntu'
@@ -104,7 +110,10 @@
       become: yes
       become_user: airflow
       register: scl_pip_install_requirements
-      changed_when: "'Successfully built' in scl_pip_install_requirements.stdout"
+      changed_when: "'Successfully ' in scl_pip_install_requirements.stdout"
+      notify:
+        - restart airflow-webserver
+        - restart airflow-scheduler
       tags: airflow
 
   when: ansible_distribution == 'CentOS'
@@ -115,6 +124,9 @@
     dest: /home/airflow/airflow-environment
   become: yes
   become_user: airflow
+  notify:
+    - restart airflow-webserver
+    - restart airflow-scheduler
   tags: airflow
 
 - name: source airflow-environment in .bashrc
@@ -153,6 +165,9 @@
     - webserver
     - scheduler
   register: add_airflow_services
+  notify:
+    - restart airflow-webserver
+    - restart airflow-scheduler
   tags: airflow, systemd
 
 - name: run daemon-reload
