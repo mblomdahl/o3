@@ -110,12 +110,49 @@
     - bin/yarn.cmd
   tags: common
 
-- name: add hadoop binaries to path and set JAVA_HOME
+- name: extract spark tarball
+  unarchive:
+    src: resources/spark-2.4.0-bin-hadoop2.7.tgz
+    dest: /usr/local
+    owner: hadoop
+    group: hadoop
+    remote_src: no
+    creates: /usr/local/spark-2.4.0-bin-hadoop2.7
+  tags: common
+
+- name: remove useless .cmd executables in spark-2.4.0-bin-hadoop2.7/bin
+  file:
+    path: /usr/local/spark-2.4.0-bin-hadoop2.7/{{ item }}
+    state: absent
+  with_items:
+    - /bin/beeline.cmd
+    - /bin/find-spark-home.cmd
+    - /bin/load-spark-env.cmd
+    - /bin/pyspark.cmd
+    - /bin/pyspark2.cmd
+    - /bin/run-example.cmd
+    - /bin/spark-class.cmd
+    - /bin/spark-class2.cmd
+    - /bin/spark-shell.cmd
+    - /bin/spark-shell2.cmd
+    - /bin/spark-sql.cmd
+    - /bin/spark-sql2.cmd
+    - /bin/spark-submit.cmd
+    - /bin/spark-submit2.cmd
+    - /bin/sparkR.cmd
+    - /bin/sparkR2.cmd
+  tags: common
+
+- name: add hadoop and spark binaries to path and set JAVA_HOME
   blockinfile:
     path: /home/hadoop/{{ bash_profile_file }}
     marker: "# {mark} ANSIBLE MANAGED BLOCK o3-common"
     block: |
-      PATH=/usr/local/hadoop-2.9.2/bin:/usr/local/hadoop-2.9.2/sbin:$PATH
+      export HADOOP_HOME=/usr/local/hadoop-2.9.2
+      export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
+      export SPARK_HOME=/usr/local/spark-2.4.0-bin-hadoop2.7
+      export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH
+      export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SPARK_HOME/bin:$SPARK_HOME/sbin:$PATH
       export JAVA_HOME={{ java_home }}
     create: yes
     state: present
