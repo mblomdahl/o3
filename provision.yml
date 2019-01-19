@@ -3,25 +3,28 @@
 - name: provision common baseline
   hosts: all
   become: yes
+  become_user: root
   roles:
     - common
 
 - name: configure hdfs, yarn and spark
   hosts: all
   become: yes
-  become_user: hadoop
+  become_user: root
   roles:
     - hadoop
 
 - name: provision hive
   hosts: master-nodes
   become: yes
+  become_user: root
   roles:
     - hive
 
 - name: provision airflow
   hosts: master-nodes
   become: yes
+  become_user: root
   roles:
     - airflow
 
