@@ -23,4 +23,45 @@
   become_user: hadoop
   tags: hive
 
+- name: install mysql connector jar (CentOS)
+  yum:
+    name: mysql-connector-java
+    state: present
+  when: ansible_distribution == 'CentOS'
+  tags: hive
+
+- name: install mysql connector jar (Ubuntu)
+  apt:
+    name: libmysql-java
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+  tags: hive
+
+- name: symlink mysql-connector-java.jar to $HIVE_HOME/lib/
+  file:
+    dest: /usr/local/apache-hive-2.3.4-bin/lib/mysql-connector-java.jar
+    src: /usr/share/java/mysql-connector-java.jar
+    owner: hadoop
+    group: hadoop
+    state: link
+  tags: hive
+
+- name: start mariadb database
+  docker_container:
+    name: hive_mariadb
+    image: mariadb:5.5
+    state: started
+    restart_policy: unless-stopped
+    volume_driver: local
+    volumes:
+      - hive_mariadb:/var/lib/mysql
+    ports:
+      - 3306:3306
+    env:
+      MYSQL_DATABASE: hive
+      MYSQL_USER: hive
+      MYSQL_PASSWORD: "{{ hive_db_user_password }}"
+      MYSQL_ROOT_PASSWORD: "{{ hive_db_root_password }}"
+  tags: airflow
+
 ...

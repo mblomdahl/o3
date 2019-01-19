@@ -15,4 +15,6 @@ galaxy_info:
   galaxy_tags:
     - hive
 
-dependencies: []
+dependencies:
+  - python
+  - docker

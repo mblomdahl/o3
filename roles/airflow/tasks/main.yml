@@ -71,6 +71,9 @@
     dest: /home/airflow/airflow_home/airflow.cfg
   become: yes
   become_user: airflow
+  notify:
+    - restart airflow-webserver
+    - restart airflow-scheduler
   tags: airflow
 
 - name: create directory structure for hdl code
@@ -180,19 +183,19 @@
 
 - name: start postgres database
   docker_container:
-    name: postgres
-    image: postgres:9
+    name: airflow_postgres
+    image: postgres:9.6
     state: started
     restart_policy: unless-stopped
     volume_driver: local
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - airflow_postgres:/var/lib/postgresql/data
     ports:
       - 5432:5432
     env:
       POSTGRES_DB: airflow
-      POSTGRES_USER: hdl
-      POSTGRES_PASSWORD: hdl
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: "{{ airflow_db_user_password }}"
   tags: airflow
 
 - name: template airflow services
