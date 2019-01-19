@@ -10,7 +10,7 @@
 - name: configure hdfs, yarn and spark
   hosts: all
   become: yes
-  become_user: root
+  become_user: hadoop
   roles:
     - hadoop
 

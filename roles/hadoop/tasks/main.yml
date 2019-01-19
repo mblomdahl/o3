@@ -52,7 +52,7 @@
       tags: hadoop
 
     - name: start dfs if not already running (ui ports 50070 & 50075)
-      shell: /usr/local/hadoop-2.9.2/sbin/start-dfs.sh && sleep 5
+      shell: /usr/local/hadoop-2.9.2/sbin/start-dfs.sh
       when: assert_jps_namenode_running is failed
       tags: hadoop
 
