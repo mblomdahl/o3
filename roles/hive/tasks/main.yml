@@ -1,0 +1,26 @@
+---
+
+- name: extract hive tarball
+  unarchive:
+    src: resources/apache-hive-2.3.4-bin.tar.gz
+    dest: /usr/local
+    owner: hadoop
+    group: hadoop
+    remote_src: no
+    creates: /usr/local/apache-hive-2.3.4-bin
+  tags: hive
+
+- name: add hive binaries to path
+  blockinfile:
+    path: /home/hadoop/{{ bash_profile_file }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK o3-hive"
+    block: |
+      export HIVE_HOME=/usr/local/apache-hive-2.3.4-bin
+      export HIVE_CONF_DIR=$HIVE_HOME/conf
+      export PATH=$HIVE_HOME/bin:$PATH
+    state: present
+  become: yes
+  become_user: hadoop
+  tags: hive
+
+...

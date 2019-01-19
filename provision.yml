@@ -6,12 +6,18 @@
   roles:
     - common
 
-- name: provision hdfs and yarn
+- name: configure hdfs, yarn and spark
   hosts: all
   become: yes
   become_user: hadoop
   roles:
     - hadoop
+
+- name: provision hive
+  hosts: master-nodes
+  become: yes
+  roles:
+    - hive
 
 - name: provision airflow
   hosts: master-nodes
