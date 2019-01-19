@@ -46,6 +46,14 @@
     state: link
   tags: hive
 
+- name: template hive-site.xml
+  template:
+    src: hive-site.xml
+    dest: /usr/local/apache-hive-2.3.4-bin/conf/hive-site.xml
+    owner: hadoop
+    group: hadoop
+  tags: hive
+
 - name: start mariadb database
   docker_container:
     name: hive_mariadb
