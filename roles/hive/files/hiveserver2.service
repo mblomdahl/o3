@@ -1,0 +1,13 @@
+[Unit]
+Description=Hiveserver2 Service
+After=network.target
+
+[Service]
+User=hadoop
+Group=hadoop
+Type=simple
+ExecStart=/bin/bash -l -c 'hive --service hiveserver2'
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

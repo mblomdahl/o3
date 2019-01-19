@@ -70,6 +70,56 @@
       MYSQL_USER: hive
       MYSQL_PASSWORD: "{{ hive_db_user_password }}"
       MYSQL_ROOT_PASSWORD: "{{ hive_db_root_password }}"
-  tags: airflow
+  tags: hive
+
+- name: check if schema is initialized
+  shell: docker exec -i hive_mariadb /usr/bin/mysql -u root -p'{{ hive_db_root_password }}'
+         -e 'use hive; show tables;'
+  register: hive_mariadb_tables
+  changed_when: (hive_mariadb_tables.stdout_lines | length) == 0
+  tags: hive
+
+- name: run schematool init
+  shell: bash -l -c '/usr/local/apache-hive-2.3.4-bin/bin/schematool -dbType mysql -initSchema'
+  become: yes
+  become_user: hadoop
+  when: (hive_mariadb_tables.stdout_lines | length) == 0
+  tags: hive
+
+- name: add hive-metastore systemd service
+  copy:
+    src: hive-metastore.service
+    dest: /usr/lib/systemd/system/hive-metastore.service
+  register: add_hive_metastore_service
+  tags: hive
+
+- name: run daemon-reload on hive-metastore service
+  shell: systemctl daemon-reload
+  when: add_hive_metastore_service is changed
+  tags: hive
+
+- name: hive-metastore service running
+  service:
+    name: hive-metastore
+    state: started
+  tags: hive
+
+- name: add hiveserver2 systemd service
+  copy:
+    src: hiveserver2.service
+    dest: /usr/lib/systemd/system/hiveserver2.service
+  register: add_hiveserver2_service
+  tags: hive
+
+- name: run daemon-reload on hiveserver2 service
+  shell: systemctl daemon-reload
+  when: add_hiveserver2_service is changed
+  tags: hive
+
+- name: hiveserver2 service running
+  service:
+    name: hiveserver2
+    state: started
+  tags: hive
 
 ...
