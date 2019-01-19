@@ -21,4 +21,14 @@
         <name>fs.default.name</name>
         <value>hdfs://o3-master:9000</value>
     </property>
+
+    <property>
+        <name>hadoop.proxyuser.hadoop.hosts</name>
+        <value>*</value>
+    </property>
+
+    <property>
+        <name>hadoop.proxyuser.hadoop.groups</name>
+        <value>*</value>
+    </property>
 </configuration>
