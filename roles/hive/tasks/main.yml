@@ -89,7 +89,7 @@
 - name: add hive-metastore systemd service
   copy:
     src: hive-metastore.service
-    dest: /usr/lib/systemd/system/hive-metastore.service
+    dest: /etc/systemd/system/hive-metastore.service
   register: add_hive_metastore_service
   tags: hive
 
@@ -107,7 +107,7 @@
 - name: add hiveserver2 systemd service
   copy:
     src: hiveserver2.service
-    dest: /usr/lib/systemd/system/hiveserver2.service
+    dest: /etc/systemd/system/hiveserver2.service
   register: add_hiveserver2_service
   tags: hive
 
