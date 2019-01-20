@@ -111,6 +111,14 @@
 
   when: "'master-nodes' in group_names"
 
+- name: allow traffic to hdfs datanode port 50010 from external dmz
+  firewalld:
+    rich_rule: 'rule family=ipv4 source address={{ item }} port port=50010 protocol=tcp accept'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items: "{{ external_dmz }}"
+
 - name: allow traffic to hdfs datanode ui port 50075 from external dmz
   firewalld:
     rich_rule: 'rule family=ipv4 source address={{ item }} port port=50075 protocol=tcp accept'
