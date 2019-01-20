@@ -100,7 +100,7 @@
 - name: checkout code base
   git:
     repo: https://github.com/mblomdahl/o3.git
-    version: feature/airflow
+    version: feature/dag1
     dest: /home/airflow/hdl/releases/o3
     accept_hostkey: yes
   become: yes
