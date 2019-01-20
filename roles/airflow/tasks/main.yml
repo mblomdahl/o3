@@ -128,6 +128,7 @@
       register: pyenv_pip_install_requirements
       changed_when: "'Successfully ' in pyenv_pip_install_requirements.stdout"
       notify:
+        - airflow initdb
         - restart airflow-webserver
         - restart airflow-scheduler
       tags: airflow
@@ -151,6 +152,7 @@
       register: scl_pip_install_requirements
       changed_when: "'Successfully ' in scl_pip_install_requirements.stdout"
       notify:
+        - airflow initdb
         - restart airflow-webserver
         - restart airflow-scheduler
       tags: airflow
