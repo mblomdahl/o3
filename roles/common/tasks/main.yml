@@ -230,6 +230,7 @@
 
 - name: add firewalld port openings
   include: firewall-update.yml
+  static: yes
   when: ansible_distribution == 'CentOS'
   tags: common
 

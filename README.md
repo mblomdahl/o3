@@ -34,5 +34,8 @@ Links
 
 * https://www.linode.com/docs/databases/hadoop/install-configure-run-spark-on-top-of-hadoop-yarn-cluster/
 
-* https://cwiki.apache.org/confluence/display/Hive/GettingStarted#GettingStarted-InstallationandConfiguration
+* https://cwiki.apache.org/confluence/display/Hive/Configuration+Properties
 
+* https://spark.apache.org/docs/latest/running-on-yarn.html
+
+* https://hadoop.apache.org/docs/r2.9.2/hadoop-project-dist/hadoop-common/ClusterSetup.html
