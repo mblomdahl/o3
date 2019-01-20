@@ -35,7 +35,6 @@
 - name: create hadoop user
   user:
     name: hadoop
-    uid: 1001
     comment: "Cluster user"
     shell: /bin/bash
   tags: common
