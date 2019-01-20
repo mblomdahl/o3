@@ -147,22 +147,22 @@
     path: /usr/local/spark-2.4.0-bin-hadoop2.7/{{ item }}
     state: absent
   with_items:
-    - /bin/beeline.cmd
-    - /bin/find-spark-home.cmd
-    - /bin/load-spark-env.cmd
-    - /bin/pyspark.cmd
-    - /bin/pyspark2.cmd
-    - /bin/run-example.cmd
-    - /bin/spark-class.cmd
-    - /bin/spark-class2.cmd
-    - /bin/spark-shell.cmd
-    - /bin/spark-shell2.cmd
-    - /bin/spark-sql.cmd
-    - /bin/spark-sql2.cmd
-    - /bin/spark-submit.cmd
-    - /bin/spark-submit2.cmd
-    - /bin/sparkR.cmd
-    - /bin/sparkR2.cmd
+    - bin/beeline.cmd
+    - bin/find-spark-home.cmd
+    - bin/load-spark-env.cmd
+    - bin/pyspark.cmd
+    - bin/pyspark2.cmd
+    - bin/run-example.cmd
+    - bin/spark-class.cmd
+    - bin/spark-class2.cmd
+    - bin/spark-shell.cmd
+    - bin/spark-shell2.cmd
+    - bin/spark-sql.cmd
+    - bin/spark-sql2.cmd
+    - bin/spark-submit.cmd
+    - bin/spark-submit2.cmd
+    - bin/sparkR.cmd
+    - bin/sparkR2.cmd
   tags: common
 
 - name: create root log dir for hadoop user services

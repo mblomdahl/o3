@@ -9,7 +9,7 @@
     rich_rule: 'rule family=ipv4 source address={{ host_subnet_cidr }} accept'
     permanent: yes
     immediate: yes
-    state: enabled
+    state: "{{ 'enabled' if (groups['all'] | length) > 1 else 'disabled' }}"
   when: "host_subnet_cidr | ipaddr('private')"
 
 - block:

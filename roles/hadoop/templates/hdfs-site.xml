@@ -29,6 +29,6 @@
 
     <property>
         <name>dfs.replication</name>
-        <value>3</value>
+        <value>{{ [(groups['slave-nodes'] | length), 3] | min }}</value>
     </property>
 </configuration>
