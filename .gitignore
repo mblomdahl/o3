@@ -18,3 +18,7 @@ sftp-config.json
 *.gz
 
 .vault-pass
+
+airflow.cfg
+airflow.db
+airflow-webserver.pid

@@ -15,6 +15,10 @@ Development Environment
     wget -P resources/ http://apache.mirrors.spacedump.net/hive/hive-2.3.4/apache-hive-2.3.4-bin.tar.gz
     python3 -m venv venv && source venv/bin/activate
     SLUGIFY_USES_TEXT_UNIDECODE=yes pip install -r requirements.txt
+    export AIRFLOW_HOME=$pwd
+    airflow initdb
+    # Update newly-generated airflow.cfg in repo root by setting `dags_folder=$(pwd)/hdl/airflow/dags`.
+    airflow webserver -p 8080
 
 
 Windows VirtualEnv
@@ -26,6 +30,8 @@ To support installing all the pip requirements for PyCharm development under Win
     docker build -t mblomdahl/o3-venv .
     docker run -it mblomdahl/o3-venv pip freeze
 
+The rest of the hassle with getting anything working on Windows is left as an exercise for the reader. :)
+ 
 
 Links
 -----
