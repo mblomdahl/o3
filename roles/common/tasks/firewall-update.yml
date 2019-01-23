@@ -5,6 +5,14 @@
     host_subnet_cidr: "{{ (ansible_default_ipv4.network + '/' + ansible_default_ipv4.netmask) | ipaddr('net') }}"
 
 - block:
+    - name: allow traffic to airflow port 8080 from external dmz and subnet
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8080 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ external_dmz + [host_subnet_cidr] }}"
+
     - name: allow traffic to hdfs namenode port 9000 from external dmz and subnet
       firewalld:
         rich_rule: 'rule family=ipv4 source address={{ item }} port port=9000 protocol=tcp accept'

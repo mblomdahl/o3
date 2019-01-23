@@ -1,0 +1,226 @@
+---
+
+- name: create airflow user
+  user:
+    name: airflow
+    comment: "Airflow user"
+    shell: /bin/bash
+  tags: airflow
+
+- name: ensure airflow owns everything under home dir
+  file:
+    path: /home/airflow
+    owner: airflow
+    group: airflow
+    recurse: yes
+  tags: airflow
+
+- name: assert dfs /user/airflow dir exists
+  shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -ls /user/airflow
+  register: assert_user_airflow_dir_exists
+  changed_when: no
+  ignore_errors: yes
+  tags: airflow
+
+- name: create dfs /user/airflow dir
+  shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -mkdir -p /user/airflow &&
+         /usr/local/hadoop-2.9.2/bin/hdfs dfs -chown airflow:supergroup /user/airflow
+  when: assert_user_airflow_dir_exists is failed
+  become: yes
+  become_user: hadoop
+  tags: airflow
+
+- name: better bash history for 'airflow' user
+  blockinfile:
+    dest: /home/airflow/.bashrc
+    mode: 0644
+    marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-history"
+    block: |
+      HISTFILESIZE=20000
+      HISTSIZE=10000
+      HISTTIMEFORMAT='%y-%m-%dT%T  '
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: create ~/airflow_home directory structure
+  file:
+    path: /home/airflow/{{ item }}
+    state: directory
+  with_items:
+    - airflow_home
+    - airflow_home/dags
+    - airflow_home/logs
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: symlink ~/airflow_home/dags/airflow -> ~/hdl/current/hdl/airflow/dags
+  file:
+    src: /home/airflow/hdl/current/hdl/airflow/dags
+    dest: /home/airflow/airflow_home/dags/airflow
+    state: link
+    force: yes
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: template airflow config
+  template:
+    src: airflow.cfg.j2
+    dest: /home/airflow/airflow_home/airflow.cfg
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: create directory structure for hdl code
+  file:
+    path: /home/airflow/{{ item }}
+    state: directory
+  with_items:
+    - hdl
+    - hdl/releases
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: symlink ~/hdl/current -> ~/hdl/releases/o3
+  file:
+    src: /home/airflow/hdl/releases/o3
+    dest: /home/airflow/hdl/current
+    state: link
+    force: yes
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: checkout code base
+  git:
+    repo: https://github.com/mblomdahl/o3.git
+    version: feature/airflow
+    dest: /home/airflow/hdl/releases/o3
+    accept_hostkey: yes
+  become: yes
+  become_user: airflow
+  notify:
+    - airflow initdb
+    - restart airflow-webserver
+    - restart airflow-scheduler
+  tags: airflow
+
+- block:
+    - name: create airflow python3 virtualenv (Ubuntu)
+      shell: python3 -m venv /home/airflow/pyenv
+      args:
+        creates: /home/airflow/pyenv
+      become: yes
+      become_user: airflow
+      tags: airflow
+
+    - name: install pip requirements.txt (Ubuntu)
+      shell: SLUGIFY_USES_TEXT_UNIDECODE=yes /home/airflow/pyenv/bin/pip install
+             -r /home/airflow/hdl/current/requirements.txt
+      become: yes
+      become_user: airflow
+      register: pyenv_pip_install_requirements
+      changed_when: "'Successfully ' in pyenv_pip_install_requirements.stdout"
+      notify:
+        - restart airflow-webserver
+        - restart airflow-scheduler
+      tags: airflow
+
+  when: ansible_distribution == 'Ubuntu'
+
+- block:
+    - name: create airflow python3 virtualenv (CentOS)
+      shell: scl enable rh-python36 'virtualenv -p python3 /home/airflow/pyenv'
+      args:
+        creates: /home/airflow/pyenv
+      become: yes
+      become_user: airflow
+      tags: airflow
+
+    - name: install pip requirements (CentOS)
+      shell: scl enable rh-python36 'SLUGIFY_USES_TEXT_UNIDECODE=yes
+             /home/airflow/pyenv/bin/pip install -r /home/airflow/hdl/current/requirements.txt'
+      become: yes
+      become_user: airflow
+      register: scl_pip_install_requirements
+      changed_when: "'Successfully ' in scl_pip_install_requirements.stdout"
+      notify:
+        - restart airflow-webserver
+        - restart airflow-scheduler
+      tags: airflow
+
+  when: ansible_distribution == 'CentOS'
+
+- name: template airflow-environment
+  template:
+    src: environment.j2
+    dest: /home/airflow/airflow-environment
+  become: yes
+  become_user: airflow
+  notify:
+    - restart airflow-webserver
+    - restart airflow-scheduler
+  tags: airflow
+
+- name: source airflow-environment in .{{ bash_profile_file }}
+  blockinfile:
+    path: /home/airflow/{{ bash_profile_file }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-environment"
+    block: |
+      set -a
+      source /home/airflow/airflow-environment
+      export PATH=/usr/local/hadoop-2.9.2/bin:/usr/local/hadoop-2.9.2/sbin:$PATH
+      export JAVA_HOME={{ java_home }}
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: start postgres database
+  docker_container:
+    name: postgres
+    image: postgres:9
+    state: started
+    restart_policy: unless-stopped
+    volume_driver: local
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    env:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: hdl
+      POSTGRES_PASSWORD: hdl
+  tags: airflow
+
+- name: template airflow services
+  template:
+    src: airflow-{{ item }}.service.j2
+    dest: /etc/systemd/system/airflow-{{ item }}.service
+  with_items:
+    - webserver
+    - scheduler
+  register: add_airflow_services
+  notify:
+    - restart airflow-webserver
+    - restart airflow-scheduler
+  tags: airflow
+
+- name: run daemon-reload on airflow services
+  shell: systemctl daemon-reload
+  when: add_airflow_services is changed
+  tags: airflow
+
+- name: set airflow services to running and auto-starting
+  service:
+    name: airflow-{{ item }}
+    state: started
+    enabled: yes
+  with_items:
+    - webserver
+    - scheduler
+  tags: airflow
+
+...

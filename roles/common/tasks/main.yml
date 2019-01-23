@@ -86,27 +86,29 @@
 - name: extract hadoop tarball
   unarchive:
     src: resources/hadoop-2.9.2.tar.gz
-    dest: /home/hadoop/
+    dest: /usr/local
+    owner: hadoop
+    group: hadoop
     remote_src: no
-    creates: /home/hadoop/hadoop-2.9.2
-  become: yes
-  become_user: hadoop
+    creates: /usr/local/hadoop-2.9.2
   tags: common
 
-- name: symlink hadoop to hadoop-2.9.2
+- name: remove useless .cmd executables in hadoop-2.9.2/sbin and /bin
   file:
-    src: /home/hadoop/hadoop-2.9.2
-    dest: /home/hadoop/hadoop
-    state: link
-  become: yes
-  become_user: hadoop
-  tags: common
-
-- name: correct bash profile misnaming on centos
-  file:
-    path: /home/hadoop/.profile
+    path: /usr/local/hadoop-2.9.2/{{ item }}
     state: absent
-  when: ansible_distribution == 'CentOS'
+  with_items:
+    - sbin/hdfs-config.cmd
+    - sbin/start-all.cmd
+    - sbin/start-dfs.cmd
+    - sbin/start-yarn.cmd
+    - sbin/stop-all.cmd
+    - sbin/stop-dfs.cmd
+    - sbin/stop-yarn.cmd
+    - bin/hadoop.cmd
+    - bin/hdfs.cmd
+    - bin/mapred.cmd
+    - bin/yarn.cmd
   tags: common
 
 - name: add hadoop binaries to path and set JAVA_HOME
@@ -114,7 +116,7 @@
     path: /home/hadoop/{{ bash_profile_file }}
     marker: "# {mark} ANSIBLE MANAGED BLOCK o3-common"
     block: |
-      PATH=/home/hadoop/hadoop/bin:/home/hadoop/hadoop/sbin:$PATH
+      PATH=/usr/local/hadoop-2.9.2/bin:/usr/local/hadoop-2.9.2/sbin:$PATH
       export JAVA_HOME={{ java_home }}
     create: yes
     state: present
@@ -124,7 +126,7 @@
 
 - name: set JAVA_HOME in ~/hadoop/etc/hadoop/hadoop-env.sh
   lineinfile:
-    path: /home/hadoop/hadoop/etc/hadoop/hadoop-env.sh
+    path: /usr/local/hadoop-2.9.2/etc/hadoop/hadoop-env.sh
     regexp: '^export JAVA_HOME='
     line: export JAVA_HOME={{ java_home }}
   become: yes
@@ -134,6 +136,6 @@
 - name: add firewalld port openings
   include: firewall-update.yml
   when: ansible_distribution == 'CentOS'
-  tags: common, firewalld
+  tags: common
 
 ...
