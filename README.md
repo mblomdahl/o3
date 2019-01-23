@@ -11,6 +11,7 @@ Development Environment
     git clone git@github.com:mblomdahl/o3.git
     cd o3/
     wget -P resources/ http://apache.mirrors.spacedump.net/hadoop/common/hadoop-2.9.2/hadoop-2.9.2.tar.gz
+    wget -P resources/ http://apache.mirrors.spacedump.net/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz
     python3 -m venv venv && source venv/bin/activate
     SLUGIFY_USES_TEXT_UNIDECODE=yes pip install -r requirements.txt
 
@@ -29,4 +30,6 @@ Links
 -----
 
 * https://www.linode.com/docs/databases/hadoop/how-to-install-and-set-up-hadoop-cluster/
+
+* https://www.linode.com/docs/databases/hadoop/install-configure-run-spark-on-top-of-hadoop-yarn-cluster/
 
