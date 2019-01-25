@@ -1,8 +1,9 @@
 ---
 
 etc_hosts_routing: |
-  172.30.3.59     o3-master
-  172.30.3.60     o3-slave1
-  172.30.3.159    o3-slave2
+  172.30.3.62     o3-master
+  172.30.3.74     o3-slave1
+  172.30.3.134    o3-slave2
+  172.30.3.18     o3-slave3
 
 ...

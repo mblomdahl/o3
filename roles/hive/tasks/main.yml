@@ -1,0 +1,125 @@
+---
+
+- name: extract hive tarball
+  unarchive:
+    src: resources/apache-hive-2.3.4-bin.tar.gz
+    dest: /usr/local
+    owner: hadoop
+    group: hadoop
+    remote_src: no
+    creates: /usr/local/apache-hive-2.3.4-bin
+  tags: hive
+
+- name: add hive binaries to path
+  blockinfile:
+    path: /home/hadoop/{{ bash_profile_file }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK o3-hive"
+    block: |
+      export HIVE_HOME=/usr/local/apache-hive-2.3.4-bin
+      export HIVE_CONF_DIR=$HIVE_HOME/conf
+      export PATH=$HIVE_HOME/bin:$PATH
+    state: present
+  become: yes
+  become_user: hadoop
+  tags: hive
+
+- name: install mysql connector jar (CentOS)
+  yum:
+    name: mysql-connector-java
+    state: present
+  when: ansible_distribution == 'CentOS'
+  tags: hive
+
+- name: install mysql connector jar (Ubuntu)
+  apt:
+    name: libmysql-java
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+  tags: hive
+
+- name: symlink mysql-connector-java.jar to $HIVE_HOME/lib/
+  file:
+    dest: /usr/local/apache-hive-2.3.4-bin/lib/mysql-connector-java.jar
+    src: /usr/share/java/mysql-connector-java.jar
+    owner: hadoop
+    group: hadoop
+    state: link
+  tags: hive
+
+- name: template hive-site.xml
+  template:
+    src: hive-site.xml
+    dest: /usr/local/apache-hive-2.3.4-bin/conf/hive-site.xml
+    owner: hadoop
+    group: hadoop
+  tags: hive
+
+- name: start mariadb database
+  docker_container:
+    name: hive_mariadb
+    image: mariadb:5.5
+    state: started
+    restart_policy: unless-stopped
+    volume_driver: local
+    volumes:
+      - hive_mariadb:/var/lib/mysql
+    ports:
+      - 3306:3306
+    env:
+      MYSQL_DATABASE: hive
+      MYSQL_USER: hive
+      MYSQL_PASSWORD: "{{ hive_db_user_password }}"
+      MYSQL_ROOT_PASSWORD: "{{ hive_db_root_password }}"
+  tags: hive
+
+- name: check if schema is initialized
+  shell: docker exec -i hive_mariadb /usr/bin/mysql -u root -p'{{ hive_db_root_password }}'
+         -e 'use hive; show tables;'
+  register: hive_mariadb_tables
+  changed_when: (hive_mariadb_tables.stdout_lines | length) == 0
+  tags: hive
+
+- name: run schematool init
+  shell: bash -l -c '/usr/local/apache-hive-2.3.4-bin/bin/schematool -dbType mysql -initSchema'
+  become: yes
+  become_user: hadoop
+  when: (hive_mariadb_tables.stdout_lines | length) == 0
+  tags: hive
+
+- name: add hive-metastore systemd service
+  copy:
+    src: hive-metastore.service
+    dest: /etc/systemd/system/hive-metastore.service
+  register: add_hive_metastore_service
+  tags: hive
+
+- name: run daemon-reload on hive-metastore service
+  shell: systemctl daemon-reload
+  when: add_hive_metastore_service is changed
+  tags: hive
+
+- name: hive-metastore service running
+  service:
+    name: hive-metastore
+    state: started
+  tags: hive
+
+- name: add hiveserver2 systemd service
+  copy:
+    src: hiveserver2.service
+    dest: /etc/systemd/system/hiveserver2.service
+  register: add_hiveserver2_service
+  tags: hive
+
+- name: run daemon-reload on hiveserver2 service
+  shell: systemctl daemon-reload
+  when: add_hiveserver2_service is changed
+  tags: hive
+
+- name: hiveserver2 service running
+  service:
+    name: hiveserver2
+    state: started
+  tags: hive
+
+...

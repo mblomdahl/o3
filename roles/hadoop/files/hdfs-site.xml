@@ -17,20 +17,18 @@
 <!-- Put site-specific property overrides in this file. -->
 
 <configuration>
-    <configuration>
-        <property>
-            <name>dfs.namenode.name.dir</name>
-            <value>/home/hadoop/data/nameNode</value>
-        </property>
+    <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>/home/hadoop/data/nameNode</value>
+    </property>
 
-        <property>
-            <name>dfs.datanode.data.dir</name>
-            <value>/home/hadoop/data/dataNode</value>
-        </property>
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>/home/hadoop/data/dataNode</value>
+    </property>
 
-        <property>
-            <name>dfs.replication</name>
-            <value>3</value>
-        </property>
-    </configuration>
+    <property>
+        <name>dfs.replication</name>
+        <value>3</value>
+    </property>
 </configuration>

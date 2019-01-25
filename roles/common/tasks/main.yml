@@ -155,7 +155,6 @@
       export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH
       export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SPARK_HOME/bin:$SPARK_HOME/sbin:$PATH
       export JAVA_HOME={{ java_home }}
-    create: yes
     state: present
   become: yes
   become_user: hadoop
