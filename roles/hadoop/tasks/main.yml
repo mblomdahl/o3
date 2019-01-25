@@ -19,7 +19,7 @@
   tags: hadoop
 
 - name: configure hadoop yarn-site.xml
-  copy:
+  template:
     src: yarn-site.xml
     dest: /usr/local/hadoop-2.9.2/etc/hadoop/yarn-site.xml
   tags: hadoop
@@ -28,6 +28,12 @@
   copy:
     src: spark-defaults.conf
     dest: /usr/local/spark-2.4.0-bin-hadoop2.7/conf/spark-defaults.conf
+  tags: spark
+
+- name: configure spark-env.sh
+  copy:
+    src: spark-env.sh
+    dest: /usr/local/spark-2.4.0-bin-hadoop2.7/conf/spark-env.sh
   tags: spark
 
 - name: configure hadoop slaves list

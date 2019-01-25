@@ -144,6 +144,38 @@
     - /bin/sparkR2.cmd
   tags: common
 
+- name: create root log dir for hadoop user services
+  file:
+    path: /var/log/{{ item }}
+    owner: hadoop
+    group: hadoop
+    state: directory
+  with_items:
+    - hadoop
+    - hadoop/userlogs
+  tags: common
+
+- name: configure log dir in hadoop-env.sh
+  blockinfile:
+    path: /usr/local/hadoop-2.9.2/etc/hadoop/hadoop-env.sh
+    insertafter: "^#export HADOOP_LOG_DIR.*"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK o3-common"
+    block: |
+      export HADOOP_LOG_DIR=/var/log/hadoop
+    state: present
+  tags: common
+
+- name: configure log dir in hadoop-env.sh
+  blockinfile:
+    path: /usr/local/hadoop-2.9.2/etc/hadoop/yarn-env.sh
+    insertafter: "^# default log directory.*"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK o3-common"
+    block: |
+      export YARN_LOG_DIR=/var/log/hadoop
+      export YARN_APP_LOGS_DIR=/var/log/hadoop/userlogs
+    state: present
+  tags: common
+
 - name: add hadoop and spark binaries to path and set JAVA_HOME
   blockinfile:
     path: /home/hadoop/{{ bash_profile_file }}
@@ -151,7 +183,13 @@
     block: |
       export HADOOP_HOME=/usr/local/hadoop-2.9.2
       export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
+      export HADOOP_LOG_DIR=/var/log/hadoop
+
+      export YARN_LOG_DIR=/var/log/hadoop
+
       export SPARK_HOME=/usr/local/spark-2.4.0-bin-hadoop2.7
+      export SPARK_LOG_DIR=/var/log/hadoop
+
       export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH
       export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SPARK_HOME/bin:$SPARK_HOME/sbin:$PATH
       export JAVA_HOME={{ java_home }}

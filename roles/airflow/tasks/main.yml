@@ -168,7 +168,7 @@
     - restart airflow-scheduler
   tags: airflow
 
-- name: source airflow-environment in .{{ bash_profile_file }}
+- name: source airflow-environment in {{ bash_profile_file }}
   blockinfile:
     path: /home/airflow/{{ bash_profile_file }}
     marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-environment"
