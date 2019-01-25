@@ -1,0 +1,54 @@
+---
+
+- name: start cluster
+  hosts: master-nodes
+  gather_facts: no
+  become: yes
+  become_user: root
+  tasks:
+    - name: check running processes
+      shell: jps
+      register: pre_start_jps_output
+      tags: hadoop, hive, spark
+
+    - debug:
+        var: pre_start_jps_output
+      tags: hadoop, hive, spark
+
+    - name: start hdfs namenode and datanodes
+      shell: bash -c 'bash -l -c "start-dfs.sh"'
+      become: yes
+      become_user: hadoop
+      tags: hadoop
+
+    - name: start yarn resourcemanager and nodemanagers
+      shell: bash -c 'bash -l -c "start-yarn.sh"'
+      become: yes
+      become_user: hadoop
+      tags: hadoop
+
+    - name: start spark history server
+      shell: bash -c 'bash -l -c "start-history-server.sh"'
+      become: yes
+      become_user: hadoop
+      tags: spark
+
+    - name: start hive services
+      service:
+        name: "{{ item }}"
+        state: started
+      with_items:
+        - hive-metastore
+        - hiveserver2
+      tags: hive
+
+    - name: start airflow services
+      service:
+        name: airflow-{{ item }}
+        state: started
+      with_items:
+        - webserver
+        - scheduler
+      tags: airflow
+
+...

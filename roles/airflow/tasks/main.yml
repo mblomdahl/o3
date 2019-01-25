@@ -100,7 +100,7 @@
 - name: checkout code base
   git:
     repo: https://github.com/mblomdahl/o3.git
-    version: feature/airflow
+    version: feature/dag1
     dest: /home/airflow/hdl/releases/o3
     accept_hostkey: yes
   become: yes
@@ -128,6 +128,7 @@
       register: pyenv_pip_install_requirements
       changed_when: "'Successfully ' in pyenv_pip_install_requirements.stdout"
       notify:
+        - airflow initdb
         - restart airflow-webserver
         - restart airflow-scheduler
       tags: airflow
@@ -151,6 +152,7 @@
       register: scl_pip_install_requirements
       changed_when: "'Successfully ' in scl_pip_install_requirements.stdout"
       notify:
+        - airflow initdb
         - restart airflow-webserver
         - restart airflow-scheduler
       tags: airflow

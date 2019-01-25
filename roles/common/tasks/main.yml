@@ -1,5 +1,28 @@
 ---
 
+- block:
+    - name: create 2g swapfile
+      shell: fallocate -l 2G /swapfile && chmod 0600 /swapfile && mkswap /swapfile
+      args:
+        creates: /swapfile
+      register: create_swapfile
+      tags: common
+
+    - name: mount /swapfile
+      mount:
+        src: /swapfile
+        path: swap
+        fstype: swap
+        state: present
+      tags: common
+
+    - name: enable swap
+      shell: swapon -va
+      when: create_swapfile is changed
+      tags: common
+
+  when: ansible_distribution == 'Ubuntu'
+
 - name: add o3 routing to /etc/hosts
   blockinfile:
     path: /etc/hosts
@@ -12,7 +35,6 @@
 - name: create hadoop user
   user:
     name: hadoop
-    uid: 1001
     comment: "Cluster user"
     shell: /bin/bash
   tags: common
@@ -126,22 +148,22 @@
     path: /usr/local/spark-2.4.0-bin-hadoop2.7/{{ item }}
     state: absent
   with_items:
-    - /bin/beeline.cmd
-    - /bin/find-spark-home.cmd
-    - /bin/load-spark-env.cmd
-    - /bin/pyspark.cmd
-    - /bin/pyspark2.cmd
-    - /bin/run-example.cmd
-    - /bin/spark-class.cmd
-    - /bin/spark-class2.cmd
-    - /bin/spark-shell.cmd
-    - /bin/spark-shell2.cmd
-    - /bin/spark-sql.cmd
-    - /bin/spark-sql2.cmd
-    - /bin/spark-submit.cmd
-    - /bin/spark-submit2.cmd
-    - /bin/sparkR.cmd
-    - /bin/sparkR2.cmd
+    - bin/beeline.cmd
+    - bin/find-spark-home.cmd
+    - bin/load-spark-env.cmd
+    - bin/pyspark.cmd
+    - bin/pyspark2.cmd
+    - bin/run-example.cmd
+    - bin/spark-class.cmd
+    - bin/spark-class2.cmd
+    - bin/spark-shell.cmd
+    - bin/spark-shell2.cmd
+    - bin/spark-sql.cmd
+    - bin/spark-sql2.cmd
+    - bin/spark-submit.cmd
+    - bin/spark-submit2.cmd
+    - bin/sparkR.cmd
+    - bin/sparkR2.cmd
   tags: common
 
 - name: create root log dir for hadoop user services

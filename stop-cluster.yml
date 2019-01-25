@@ -1,0 +1,54 @@
+---
+
+- name: stop cluster
+  hosts: master-nodes
+  gather_facts: no
+  become: yes
+  become_user: root
+  tasks:
+    - name: stop airflow services
+      service:
+        name: airflow-{{ item }}
+        state: stopped
+      with_items:
+        - scheduler
+        - webserver
+      tags: airflow
+
+    - name: stop hive services
+      service:
+        name: "{{ item }}"
+        state: stopped
+      with_items:
+        - hiveserver2
+        - hive-metastore
+      tags: hive
+
+    - name: stop spark history server
+      shell: bash -c 'bash -l -c "stop-history-server.sh"'
+      become: yes
+      become_user: hadoop
+      tags: spark
+
+    - name: stop yarn resourcemanager and nodemanagers
+      shell: bash -c 'bash -l -c "stop-yarn.sh"'
+      become: yes
+      become_user: hadoop
+      tags: hadoop
+
+    - name: stop hdfs namenode and datanodes
+      shell: bash -c 'bash -l -c "stop-dfs.sh"'
+      become: yes
+      become_user: hadoop
+      tags: hadoop
+
+    - name: check running processes
+      shell: jps
+      register: post_stop_jps_output
+      tags: hadoop, hive, spark
+
+    - debug:
+        var: post_stop_jps_output
+      tags: hadoop, hive, spark
+
+...

@@ -7,7 +7,7 @@
   tags: hadoop
 
 - name: configure hadoop hdfs-site.xml
-  copy:
+  template:
     src: hdfs-site.xml
     dest: /usr/local/hadoop-2.9.2/etc/hadoop/hdfs-site.xml
   tags: hadoop
