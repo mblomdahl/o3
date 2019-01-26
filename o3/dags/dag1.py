@@ -38,7 +38,7 @@ FILE_INPUT_DIR = path.join(conf.AIRFLOW_HOME, 'input')
 PROCESSING_DIR = path.join(conf.AIRFLOW_HOME, 'processing')
 
 
-with DAG('dag1', default_args=default_args, schedule_interval=timedelta(seconds=30), catchup=False) as dag1:
+with DAG('dag1', default_args=default_args, schedule_interval=timedelta(minutes=60), catchup=False) as dag1:
 
     def _ensure_dirs_exist():
         if not path.isdir(FILE_INPUT_DIR):
