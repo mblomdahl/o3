@@ -1,13 +1,13 @@
 """
-A stab at https://github.com/mblomdahl/o3/issues/10
-===================================================
+### A stab at https://github.com/mblomdahl/o3/issues/10
 
 Every hour:
-- Waits for something to show up in `$AIRFLOW_HOME/input/` dir
-- Moves *.txt files in input dir to `$AIRFLOW_HOME/processing/`
-- Primitive word and row counts in 2 parallel operations
-- Prints a summary of word/row counts
-- Deletes the processed input file
+
+* Waits for something to show up in `$AIRFLOW_HOME/input/` dir
+* Moves *.txt files in input dir to `$AIRFLOW_HOME/processing/`
+* Primitive word and row counts in 2 parallel operations
+* Prints a summary of word/row counts
+* Deletes the processed input file
 
 Totally awesome, right!
 
@@ -120,4 +120,4 @@ with DAG('o3_d_dag1', default_args=default_args, schedule_interval=timedelta(min
     t0 >> s0 >> t1 >> [t2a, t2b] >> t3 >> t4
 
 
-dag1.doc_rst = __doc__
+dag1.doc_md = __doc__
