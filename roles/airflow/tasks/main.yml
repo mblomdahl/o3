@@ -35,26 +35,10 @@
   become_user: airflow
   tags: airflow
 
-- name: remove old ~/hdl directory
-  file:
-    path: /home/airflow/hdl
-    state: absent
-  become: yes
-  become_user: airflow
-  tags: airflow
-
 - name: create ~/airflow_home directory
   file:
     path: /home/airflow/airflow_home
     state: directory
-  become: yes
-  become_user: airflow
-  tags: airflow
-
-- name: remove old ~/airflow_home/dags link
-  file:
-    path: /home/airflow/airflow_home/dags
-    state: absent
   become: yes
   become_user: airflow
   tags: airflow
