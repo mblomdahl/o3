@@ -6,4 +6,12 @@ etc_hosts_routing: |
   172.30.3.134    o3-slave2
   172.30.3.18     o3-slave3
 
+airflow_admins:
+  - mblomdahl
+  - cbackstrom
+
+hadoop_admins:
+  - mblomdahl
+  - cbackstrom
+
 ...

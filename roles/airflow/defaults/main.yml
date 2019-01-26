@@ -1,8 +1,8 @@
 ---
 
-hdl_env_name: DEV
-
 source_branch: master
+
+airflow_admins: []
 
 airflow_db_user_password: !vault |
   $ANSIBLE_VAULT;1.1;AES256

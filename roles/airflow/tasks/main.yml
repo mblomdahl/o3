@@ -7,6 +7,11 @@
     shell: /bin/bash
   tags: airflow
 
+- name: set up authorized_keys for airflow user
+  authorized_key: user=airflow key="{{ lookup('file', 'public_keys/' + item + '_id_rsa.pub') }}"
+  with_items: "{{ ['hadoop'] + airflow_admins }}"
+  tags: airflow
+
 - name: assert dfs /user/airflow dir exists
   shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -ls /user/airflow
   register: assert_user_airflow_dir_exists
@@ -58,7 +63,7 @@
 - name: checkout code base
   git:
     repo: https://github.com/mblomdahl/o3.git
-    version: feature/dag1
+    version: feature/dag2
     dest: /home/airflow/o3
     accept_hostkey: yes
   become: yes

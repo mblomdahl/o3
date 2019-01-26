@@ -53,11 +53,8 @@
   tags: common
 
 - name: set up authorized_keys for hadoop user
-  authorized_key: user=hadoop key="{{ item }}"
-  with_file:
-    - public_keys/hadoop_id_rsa.pub
-    - public_keys/mblomdahl_id_rsa.pub
-    - public_keys/cbackstrom_id_rsa.pub
+  authorized_key: user=hadoop key="{{ lookup('file', 'public_keys/' + item + '_id_rsa.pub') }}"
+  with_items: "{{ ['hadoop'] + hadoop_admins }}"
   tags: common
 
 - name: add private key for hadoop user
