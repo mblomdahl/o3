@@ -7,14 +7,6 @@
     shell: /bin/bash
   tags: airflow
 
-- name: ensure airflow owns everything under home dir
-  file:
-    path: /home/airflow
-    owner: airflow
-    group: airflow
-    recurse: yes
-  tags: airflow
-
 - name: assert dfs /user/airflow dir exists
   shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -ls /user/airflow
   register: assert_user_airflow_dir_exists
@@ -43,24 +35,26 @@
   become_user: airflow
   tags: airflow
 
-- name: create ~/airflow_home directory structure
+- name: remove old ~/hdl directory
   file:
-    path: /home/airflow/{{ item }}
-    state: directory
-  with_items:
-    - airflow_home
-    - airflow_home/dags
-    - airflow_home/logs
+    path: /home/airflow/hdl
+    state: absent
   become: yes
   become_user: airflow
   tags: airflow
 
-- name: symlink ~/airflow_home/dags/airflow -> ~/hdl/current/hdl/airflow/dags
+- name: create ~/airflow_home directory
   file:
-    src: /home/airflow/hdl/current/hdl/airflow/dags
-    dest: /home/airflow/airflow_home/dags/airflow
-    state: link
-    force: yes
+    path: /home/airflow/airflow_home
+    state: directory
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: remove old ~/airflow_home/dags link
+  file:
+    path: /home/airflow/airflow_home/dags
+    state: absent
   become: yes
   become_user: airflow
   tags: airflow
@@ -72,43 +66,19 @@
   become: yes
   become_user: airflow
   notify:
+    - airflow initdb
     - restart airflow-webserver
     - restart airflow-scheduler
-  tags: airflow
-
-- name: create directory structure for hdl code
-  file:
-    path: /home/airflow/{{ item }}
-    state: directory
-  with_items:
-    - hdl
-    - hdl/releases
-  become: yes
-  become_user: airflow
-  tags: airflow
-
-- name: symlink ~/hdl/current -> ~/hdl/releases/o3
-  file:
-    src: /home/airflow/hdl/releases/o3
-    dest: /home/airflow/hdl/current
-    state: link
-    force: yes
-  become: yes
-  become_user: airflow
   tags: airflow
 
 - name: checkout code base
   git:
     repo: https://github.com/mblomdahl/o3.git
     version: feature/dag1
-    dest: /home/airflow/hdl/releases/o3
+    dest: /home/airflow/o3
     accept_hostkey: yes
   become: yes
   become_user: airflow
-  notify:
-    - airflow initdb
-    - restart airflow-webserver
-    - restart airflow-scheduler
   tags: airflow
 
 - block:
@@ -122,7 +92,7 @@
 
     - name: install pip requirements.txt (Ubuntu)
       shell: SLUGIFY_USES_TEXT_UNIDECODE=yes /home/airflow/pyenv/bin/pip install
-             -r /home/airflow/hdl/current/requirements.txt
+             -r /home/airflow/o3/requirements.txt
       become: yes
       become_user: airflow
       register: pyenv_pip_install_requirements
@@ -146,7 +116,7 @@
 
     - name: install pip requirements (CentOS)
       shell: scl enable rh-python36 'SLUGIFY_USES_TEXT_UNIDECODE=yes
-             /home/airflow/pyenv/bin/pip install -r /home/airflow/hdl/current/requirements.txt'
+             /home/airflow/pyenv/bin/pip install -r /home/airflow/o3/requirements.txt'
       become: yes
       become_user: airflow
       register: scl_pip_install_requirements
