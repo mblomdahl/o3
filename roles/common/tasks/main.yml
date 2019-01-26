@@ -57,6 +57,7 @@
   with_file:
     - public_keys/hadoop_id_rsa.pub
     - public_keys/mblomdahl_id_rsa.pub
+    - public_keys/cbackstrom_id_rsa.pub
   tags: common
 
 - name: add private key for hadoop user
