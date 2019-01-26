@@ -1,5 +1,6 @@
 """
-## A stab at https://github.com/mblomdahl/o3/issues/10
+A stab at https://github.com/mblomdahl/o3/issues/10
+===================================================
 
 Every hour:
 - Waits for something to show up in `$AIRFLOW_HOME/input/` dir
@@ -119,4 +120,4 @@ with DAG('o3_d_dag1', default_args=default_args, schedule_interval=timedelta(min
     t0 >> s0 >> t1 >> [t2a, t2b] >> t3 >> t4
 
 
-dag1.doc_md = __doc__
+dag1.doc_rst = __doc__
