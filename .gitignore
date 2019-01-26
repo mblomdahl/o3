@@ -6,6 +6,7 @@
 .idea/
 
 venv/
+pyenv/
 
 .vagrant/
 scratchpad.py
@@ -19,6 +20,8 @@ sftp-config.json
 
 .vault-pass
 
-airflow.cfg
-airflow.db
-airflow-webserver.pid
+airflow_home/logs/
+airflow_home/airflow.cfg
+airflow_home/unittests.cfg
+airflow_home/airflow.db
+airflow_home/airflow-webserver.pid

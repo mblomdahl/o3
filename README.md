@@ -15,9 +15,9 @@ Development Environment
     wget -P resources/ http://apache.mirrors.spacedump.net/hive/hive-2.3.4/apache-hive-2.3.4-bin.tar.gz
     python3 -m venv venv && source venv/bin/activate
     SLUGIFY_USES_TEXT_UNIDECODE=yes pip install -r requirements.txt
-    export AIRFLOW_HOME=$pwd
+    export AIRFLOW_HOME=$(pwd)/airflow_home
     airflow initdb
-    # Update newly-generated airflow.cfg in repo root by setting `dags_folder=$(pwd)/hdl/airflow/dags`.
+    # Update newly-generated airflow.cfg in AIRFLOW_HOME by setting `dags_folder=$(pwd)/o3/dags`.
     airflow webserver -p 8080
 
 
