@@ -7,11 +7,9 @@ sql_alchemy_pool_recycle = 3600
 
 load_examples = False
 dags_are_paused_at_creation = True
+dags_folder = /home/airflow/o3/o3/dags
 
 [webserver]
 endpoint_url = http://localhost:8080
 base_url = http://localhost:8080
 catchup_by_default = False
-
-[email]
-email_backend = hdl.airflow.sendgrid.send_email

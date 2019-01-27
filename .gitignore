@@ -6,6 +6,7 @@
 .idea/
 
 venv/
+pyenv/
 
 .vagrant/
 scratchpad.py
@@ -18,3 +19,5 @@ sftp-config.json
 *.gz
 
 .vault-pass
+
+airflow_home/*
