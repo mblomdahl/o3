@@ -25,17 +25,6 @@ First setup [conda](https://conda.io/projects/conda/en/latest/) with Python 3.6,
     airflow webserver -p 8080
 
 
-Windows VirtualEnv
-------------------
-
-To support installing all the pip requirements for PyCharm development under Windows, create a Docker image and
-[configure the IDE with it](https://www.jetbrains.com/help/pycharm/using-docker-as-a-remote-interpreter.html). E.g.
-
-    docker build -t mblomdahl/o3-venv .
-    docker run -it mblomdahl/o3-venv pip freeze
-
-The rest of the hassle with getting anything working on Windows is left as an exercise for the reader. :)
- 
 
 Links
 -----
