@@ -13,7 +13,7 @@ Totally awesome, right!
 
 """
 
-from os import path, remove, makedirs
+from os import path, remove
 from glob import glob
 from time import sleep
 from pprint import pformat
@@ -24,6 +24,8 @@ from airflow import DAG, conf
 from airflow.contrib.sensors.file_sensor import FileSensor
 from airflow.exceptions import AirflowSkipException
 from airflow.operators.python_operator import PythonOperator
+
+from o3.operators.ensure_dir_operator import EnsureDirOperator
 
 
 default_args = {
@@ -46,22 +48,12 @@ FILE_INPUT_DIR = path.join(conf.AIRFLOW_HOME, 'input')
 PROCESSING_DIR = path.join(conf.AIRFLOW_HOME, 'processing')
 
 
-with DAG('o3_d_dag1', default_args=default_args, schedule_interval=timedelta(minutes=60), catchup=False) as dag1:
+with DAG('o3_d_dag1', default_args=default_args,
+         schedule_interval=timedelta(minutes=60), catchup=False) as dag1:
 
-    def _o3_t_ensure_dirs_exist():
-        if not path.isdir(FILE_INPUT_DIR):
-            print(f'Creating {FILE_INPUT_DIR} directory.')
-            makedirs(FILE_INPUT_DIR)
-        else:
-            print(f'Input dir {FILE_INPUT_DIR} exists.')
-
-        if not path.isdir(PROCESSING_DIR):
-            print(f'Creating {PROCESSING_DIR} directory.')
-            makedirs(PROCESSING_DIR)
-        else:
-            print(f'Processing dir {PROCESSING_DIR} exists.')
-
-    t0 = PythonOperator(task_id='o3_t_ensure_dirs_exist', python_callable=_o3_t_ensure_dirs_exist)
+    t0 = EnsureDirOperator(task_id='o3_t_ensure_dirs_exist',
+                           paths=[FILE_INPUT_DIR, PROCESSING_DIR],
+                           fs_type='local')
 
     s0 = FileSensor(task_id='o3_s_scan_input_dir', fs_conn_id='fs_default',
                     filepath=path.join(conf.AIRFLOW_HOME, 'input/'))

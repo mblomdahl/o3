@@ -30,6 +30,7 @@ from airflow.exceptions import AirflowSkipException
 from airflow.operators.python_operator import PythonOperator
 
 from o3.hooks.hdfs_hook import HDFSHook
+from o3.operators.ensure_dir_operator import EnsureDirOperator
 from o3.sensors.hdfs_sensor import HDFSSensor
 
 
@@ -56,22 +57,9 @@ PROCESSING_DIR = path.join('/user/airflow/', 'processing')
 with DAG('o3_d_dag2', default_args=default_args, schedule_interval='@once',
          catchup=False) as dag2:
 
-    def _o3_t_ensure_dirs_exist():
-        hdfs = HDFSHook().get_conn()
-        if hdfs.isdir(FILE_INPUT_DIR):
-            print(f'Input HDFS dir {FILE_INPUT_DIR} exists.')
-        else:
-            print(f'Creating HDFS {FILE_INPUT_DIR} directory.')
-            hdfs.mkdir(FILE_INPUT_DIR)
-
-        if hdfs.isdir(PROCESSING_DIR):
-            print(f'Processing HDFS dir {PROCESSING_DIR} exists.')
-        else:
-            print(f'Creating HDFS {PROCESSING_DIR} directory.')
-            hdfs.mkdir(PROCESSING_DIR)
-
-    t0 = PythonOperator(task_id='o3_t_ensure_dirs_exist',
-                        python_callable=_o3_t_ensure_dirs_exist)
+    t0 = EnsureDirOperator(task_id='o3_t_ensure_dirs_exist',
+                           paths=[FILE_INPUT_DIR, PROCESSING_DIR],
+                           fs_type='hdfs')
 
     s0 = HDFSSensor(task_id='o3_s_scan_input_dir', filepath=FILE_INPUT_DIR)
 
