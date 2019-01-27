@@ -19,6 +19,7 @@ First setup [conda](https://conda.io/projects/conda/en/latest/) with Python 3.6,
     conda activate o3
     conda install --name o3 --file spec-file-osx.txt 
     SLUGIFY_USES_TEXT_UNIDECODE=yes pip install -r requirements.txt
+    pip install -e .
     export AIRFLOW_HOME=$(pwd)/airflow_home
     airflow initdb
     # Update newly-generated airflow.cfg in AIRFLOW_HOME by setting `dags_folder=$(pwd)/o3/dags`.
