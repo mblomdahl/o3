@@ -21,4 +21,5 @@ ci-*
 
 .vault-pass
 
+*.egg-info/
 airflow_home/*
