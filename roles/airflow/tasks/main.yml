@@ -63,60 +63,93 @@
 - name: checkout code base
   git:
     repo: https://github.com/mblomdahl/o3.git
-    version: feature/dag2
+    version: feature/conda
     dest: /home/airflow/o3
     accept_hostkey: yes
   become: yes
   become_user: airflow
   tags: airflow
 
-- block:
-    - name: create airflow python3 virtualenv (Ubuntu)
-      shell: python3 -m venv /home/airflow/pyenv
-      args:
-        creates: /home/airflow/pyenv
-      become: yes
-      become_user: airflow
-      tags: airflow
+- name: upload anaconda3 installer
+  copy:
+    src: resources/Anaconda3-5.2.0-Linux-x86_64.sh
+    dest: /tmp/Anaconda3-5.2.0-Linux-x86_64.sh
+    owner: airflow
+    group: airflow
+    mode: 0755
+  tags: airflow
 
-    - name: install pip requirements.txt (Ubuntu)
-      shell: SLUGIFY_USES_TEXT_UNIDECODE=yes /home/airflow/pyenv/bin/pip install
-             -r /home/airflow/o3/requirements.txt
-      become: yes
-      become_user: airflow
-      register: pyenv_pip_install_requirements
-      changed_when: "'Successfully ' in pyenv_pip_install_requirements.stdout"
-      notify:
-        - airflow initdb
-        - restart airflow-webserver
-        - restart airflow-scheduler
-      tags: airflow
+- name: run anaconda3 installer
+  shell: /tmp/Anaconda3-5.2.0-Linux-x86_64.sh -b -f -s
+  args:
+    creates: /home/airflow/anaconda3
+  become: yes
+  become_user: airflow
+  tags: airflow
 
-  when: ansible_distribution == 'Ubuntu'
+- name: anaconda3 shell setup
+  blockinfile:
+    dest: /home/airflow/.bashrc
+    marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-anaconda3"
+    block: |
+      . /home/airflow/anaconda3/etc/profile.d/conda.sh
+  become: yes
+  become_user: airflow
+  tags: airflow
 
-- block:
-    - name: create airflow python3 virtualenv (CentOS)
-      shell: scl enable rh-python36 'virtualenv -p python3 /home/airflow/pyenv'
-      args:
-        creates: /home/airflow/pyenv
-      become: yes
-      become_user: airflow
-      tags: airflow
+- name: create ~/.conda/pkgs
+  file:
+    path: /home/airflow/{{ item }}
+    state: directory
+  become: yes
+  become_user: airflow
+  with_items:
+    - .conda
+    - .conda/pkgs
+  register: dot_conda_dirs
+  tags: airflow
 
-    - name: install pip requirements (CentOS)
-      shell: scl enable rh-python36 'SLUGIFY_USES_TEXT_UNIDECODE=yes
-             /home/airflow/pyenv/bin/pip install -r /home/airflow/o3/requirements.txt'
-      become: yes
-      become_user: airflow
-      register: scl_pip_install_requirements
-      changed_when: "'Successfully ' in scl_pip_install_requirements.stdout"
-      notify:
-        - airflow initdb
-        - restart airflow-webserver
-        - restart airflow-scheduler
-      tags: airflow
+- name: create ~/.conda/environments.txt
+  file:
+    path: /home/airflow/.conda/environments.txt
+    state: touch
+    mode: 0664
+  become: yes
+  become_user: airflow
+  when: dot_conda_dirs is changed
+  tags: airflow
 
-  when: ansible_distribution == 'CentOS'
+- name: create airflow conda virtualenv
+  shell: bash -l -c '/home/airflow/anaconda3/bin/conda
+         create --name o3 --yes python=3.6'
+  args:
+    creates: /home/airflow/anaconda3/envs/o3
+  become: yes
+  become_user: airflow
+  register: conda_o3_env
+  tags: airflow
+
+- name: install spec-file-linux
+  shell: bash -l -c 'conda activate o3 && conda install --name o3
+         --file ~/o3/spec-file-linux.txt'
+  become: yes
+  become_user: airflow
+  when: conda_o3_env is changed
+  tags: airflow
+
+- name: install pip requirements.txt
+  shell: bash -l -c 'conda activate o3 && SLUGIFY_USES_TEXT_UNIDECODE=yes
+         pip install -r /home/airflow/o3/requirements.txt'
+  become: yes
+  become_user: airflow
+  register: o3_pip_install_requirements
+  changed_when: "'Successfully ' in o3_pip_install_requirements.stdout"
+  notify:
+    - airflow initdb
+    - restart airflow-webserver
+    - restart airflow-scheduler
+  tags: airflow
+
 
 - name: template airflow-environment
   template:
