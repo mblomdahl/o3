@@ -142,6 +142,17 @@
         - restart airflow-scheduler
       tags: airflow
 
+    - name: ensure o3 package is installed withing the anacoda environment o3
+      shell: bash -lc 'source /home/airflow/anaconda3/bin/activate o3;
+             pip install -e /home/airflow/o3'
+      become: yes
+      become_user: airflow
+      notify:
+        - airflow initdb
+        - restart airflow-webserver
+        - restart airflow-scheduler
+      tags: airflow
+
   when: ansible_distribution == 'Ubuntu'
 
 - block:
