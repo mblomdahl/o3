@@ -15,9 +15,10 @@ First setup [conda](https://conda.io/projects/conda/en/latest/) with Python 3.6,
     wget -P resources/ http://apache.mirrors.spacedump.net/hadoop/common/hadoop-2.9.2/hadoop-2.9.2.tar.gz
     wget -P resources/ http://apache.mirrors.spacedump.net/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz
     wget -P resources/ http://apache.mirrors.spacedump.net/hive/hive-2.3.4/apache-hive-2.3.4-bin.tar.gz
+    wget -P resources/ https://repo.anaconda.com/archive/Anaconda3-5.2.0-Linux-x86_64.sh
     conda create --name o3 --yes python=3.6
     conda activate o3
-    conda install --name o3 --file spec-file-osx.txt 
+    conda install --name o3 --file spec-file-osx.txt
     SLUGIFY_USES_TEXT_UNIDECODE=yes pip install -r requirements.txt
     pip install -e .
     export AIRFLOW_HOME=$(pwd)/airflow_home
