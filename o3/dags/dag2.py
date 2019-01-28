@@ -21,16 +21,17 @@ What it does:
 """
 
 from os import path
-from time import sleep
-from pprint import pformat
 from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.exceptions import AirflowSkipException
 from airflow.operators.python_operator import PythonOperator
 
-from o3.hooks.hdfs_hook import HDFSHook
 from o3.sensors.hdfs_sensor import HDFSSensor
+from o3.operators.ensure_dir_operator import EnsureDirOperator
+from o3.operators.move_file_operator import MoveFileOperator
+from o3.operators.word_count_operator import WordCountOperator
+from o3.operators.row_count_operator import RowCountOperator
+from o3.operators.remove_file_operator import RemoveFileOperator
 
 
 default_args = {
@@ -56,95 +57,45 @@ PROCESSING_DIR = path.join('/user/airflow/', 'processing')
 with DAG('o3_d_dag2', default_args=default_args, schedule_interval='@once',
          catchup=False) as dag2:
 
-    def _o3_t_ensure_dirs_exist():
-        hdfs = HDFSHook().get_conn()
-        if hdfs.isdir(FILE_INPUT_DIR):
-            print(f'Input HDFS dir {FILE_INPUT_DIR} exists.')
-        else:
-            print(f'Creating HDFS {FILE_INPUT_DIR} directory.')
-            hdfs.mkdir(FILE_INPUT_DIR)
+    t0 = EnsureDirOperator(task_id='o3_t_ensure_dirs_exist',
+                           paths=[FILE_INPUT_DIR, PROCESSING_DIR],
+                           fs_type='hdfs')
 
-        if hdfs.isdir(PROCESSING_DIR):
-            print(f'Processing HDFS dir {PROCESSING_DIR} exists.')
-        else:
-            print(f'Creating HDFS {PROCESSING_DIR} directory.')
-            hdfs.mkdir(PROCESSING_DIR)
+    s0 = HDFSSensor(task_id='o3_s_scan_input_dir',
+                    hdfs_conn_id='hdfs_default',
+                    filepath=FILE_INPUT_DIR)
 
-    t0 = PythonOperator(task_id='o3_t_ensure_dirs_exist',
-                        python_callable=_o3_t_ensure_dirs_exist)
+    t1 = MoveFileOperator(task_id='o3_t_get_input_file',
+                          glob_pattern='*.txt',
+                          src_dir=FILE_INPUT_DIR,
+                          dest_dir=PROCESSING_DIR,
+                          fs_type='hdfs',
+                          max_files=1,
+                          depends_on_past=True)
 
-    s0 = HDFSSensor(task_id='o3_s_scan_input_dir', filepath=FILE_INPUT_DIR)
+    def _get_t1_filepaths(**ctx):
+        return ctx['ti'].xcom_pull(task_ids='o3_t_get_input_file')
 
-    def _o3_t_get_input_file(*args, **kwargs):
-        print('_o3_t_get_input_file', pformat(args), pformat(kwargs))
-        hdfs = HDFSHook().get_conn()
-        filenames = hdfs.glob(f'{FILE_INPUT_DIR}/*.txt')
-        if len(filenames):
-            source_path = filenames[0]
-            target_path = f'{PROCESSING_DIR}/{ path.basename(filenames[0]) }'
-            print(f'Found file { source_path }, moving to { target_path }.')
-            hdfs.mv(source_path, target_path)
-            return target_path
-        else:
-            raise AirflowSkipException('No files found.')
+    t2a = WordCountOperator(task_id='o3_t_count_words',
+                            filepath=_get_t1_filepaths,
+                            fs_type='hdfs')
 
-    t1 = PythonOperator(task_id='o3_t_get_input_file',
-                        python_callable=_o3_t_get_input_file,
-                        depends_on_past=True)
+    t2b = RowCountOperator(task_id='o3_t_count_rows',
+                           filepath=_get_t1_filepaths,
+                           fs_type='hdfs')
 
-    def _o3_t_count_words(*args, **kwargs):
-        print('_o3_t_count_words', pformat(args), pformat(kwargs))
-        hdfs = HDFSHook().get_conn()
-        process_filepath = kwargs['task_instance'].xcom_pull(
-            task_ids='o3_t_get_input_file')
-
-        sleep(5)
-        with hdfs.open(process_filepath, 'rb') as file_obj:
-            spaces = file_obj.read().decode('utf-8').replace(
-                '\n', ' ').count(' ')
-            return f'counted {spaces + 1} words'
-
-    t2a = PythonOperator(task_id='o3_t_count_words',
-                         python_callable=_o3_t_count_words,
-                         provide_context=True)
-
-    def _o3_t_count_rows(*args, **kwargs):
-        print('__o3_t_count_rows', pformat(args), pformat(kwargs))
-        hdfs = HDFSHook().get_conn()
-        process_filepath = kwargs['task_instance'].xcom_pull(
-            task_ids='o3_t_get_input_file')
-
-        sleep(10)
-        with hdfs.open(process_filepath, 'rb') as file_obj:
-            rows = len(file_obj.read().decode('utf-8').splitlines())
-            return f'found {rows} rows'
-
-    t2b = PythonOperator(task_id='o3_t_count_rows',
-                         python_callable=_o3_t_count_rows,
-                         provide_context=True)
-
-    def _o3_t_summarize(*args, **kwargs):
-        print('_o3_t_summarize', pformat(args), pformat(kwargs))
-        words, rows = kwargs['task_instance'].xcom_pull(
+    def _o3_t_summarize(**ctx):
+        words, rows = ctx['task_instance'].xcom_pull(
             task_ids=['o3_t_count_words', 'o3_t_count_rows'])
-
         return f'summary: {words} / {rows}'
 
     t3 = PythonOperator(task_id='o3_t_summarize',
                         python_callable=_o3_t_summarize,
                         provide_context=True)
 
-    def _o3_t_remove_input(*args, **kwargs):
-        print('_o3_t_remove_input', pformat(args), pformat(kwargs))
-        hdfs = HDFSHook().get_conn()
-        process_filepath = kwargs['task_instance'].xcom_pull(
-            task_ids='o3_t_get_input_file')
-
-        hdfs.rm(process_filepath)
-
-    t4 = PythonOperator(task_id='o3_t_remove_input',
-                        python_callable=_o3_t_remove_input,
-                        provide_context=True)
+    t4 = RemoveFileOperator(task_id='o3_t_remove_input',
+                            filepath=_get_t1_filepaths,
+                            fs_type='hdfs')
 
     # Workflow!
     t0 >> s0 >> t1 >> [t2a, t2b] >> t3 >> t4
