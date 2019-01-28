@@ -21,19 +21,17 @@ What it does:
 """
 
 from os import path
-from time import sleep
-from pprint import pformat
 from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 
-from o3.hooks.hdfs_hook import HDFSHook
 from o3.sensors.hdfs_sensor import HDFSSensor
 from o3.operators.ensure_dir_operator import EnsureDirOperator
 from o3.operators.move_file_operator import MoveFileOperator
 from o3.operators.word_count_operator import WordCountOperator
 from o3.operators.row_count_operator import RowCountOperator
+from o3.operators.remove_file_operator import RemoveFileOperator
 
 
 default_args = {
@@ -86,8 +84,7 @@ with DAG('o3_d_dag2', default_args=default_args, schedule_interval='@once',
                            filepath=_get_t1_filepaths,
                            fs_type='hdfs')
 
-    def _o3_t_summarize(*args, **kwargs):
-        print('_o3_t_summarize', pformat(args), pformat(kwargs))
+    def _o3_t_summarize(**kwargs):
         words, rows = kwargs['task_instance'].xcom_pull(
             task_ids=['o3_t_count_words', 'o3_t_count_rows'])
 
@@ -97,17 +94,9 @@ with DAG('o3_d_dag2', default_args=default_args, schedule_interval='@once',
                         python_callable=_o3_t_summarize,
                         provide_context=True)
 
-    def _o3_t_remove_input(*args, **kwargs):
-        print('_o3_t_remove_input', pformat(args), pformat(kwargs))
-        hdfs = HDFSHook().get_conn()
-        process_filepath = kwargs['task_instance'].xcom_pull(
-            task_ids='o3_t_get_input_file')[0]
-
-        hdfs.rm(process_filepath)
-
-    t4 = PythonOperator(task_id='o3_t_remove_input',
-                        python_callable=_o3_t_remove_input,
-                        provide_context=True)
+    t4 = RemoveFileOperator(task_id='o3_t_remove_input',
+                            filepath=_get_t1_filepaths,
+                            fs_type='hdfs')
 
     # Workflow!
     t0 >> s0 >> t1 >> [t2a, t2b] >> t3 >> t4

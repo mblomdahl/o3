@@ -13,8 +13,7 @@ Totally awesome, right!
 
 """
 
-from os import path, remove
-from pprint import pformat
+from os import path
 from datetime import datetime, timedelta
 
 from airflow import DAG, conf
@@ -25,6 +24,7 @@ from o3.operators.ensure_dir_operator import EnsureDirOperator
 from o3.operators.move_file_operator import MoveFileOperator
 from o3.operators.word_count_operator import WordCountOperator
 from o3.operators.row_count_operator import RowCountOperator
+from o3.operators.remove_file_operator import RemoveFileOperator
 
 
 default_args = {
@@ -66,8 +66,8 @@ with DAG('o3_d_dag1', default_args=default_args,
                           max_files=1,
                           depends_on_past=True)
 
-    def _get_t1_filepaths(**kwargs):
-        return kwargs['ti'].xcom_pull(task_ids='o3_t_get_input_file')
+    def _get_t1_filepaths(**ctx):
+        return ctx['ti'].xcom_pull(task_ids='o3_t_get_input_file')
 
     t2a = WordCountOperator(task_id='o3_t_count_words',
                             filepath=_get_t1_filepaths,
@@ -77,19 +77,18 @@ with DAG('o3_d_dag1', default_args=default_args,
                            filepath=_get_t1_filepaths,
                            fs_type='local')
 
-    def _o3_t_summarize(*args, **kwargs):
-        print('_o3_t_summarize', pformat(args), pformat(kwargs))
-        words, rows = kwargs['task_instance'].xcom_pull(task_ids=['o3_t_count_words', 'o3_t_count_rows'])
+    def _o3_t_summarize(**kwargs):
+        words, rows = kwargs['task_instance'].xcom_pull(
+            task_ids=['o3_t_count_words', 'o3_t_count_rows'])
         return f'summary: {words} / {rows}'
 
-    t3 = PythonOperator(task_id='o3_t_summarize', python_callable=_o3_t_summarize, provide_context=True)
+    t3 = PythonOperator(task_id='o3_t_summarize',
+                        python_callable=_o3_t_summarize,
+                        provide_context=True)
 
-    def _o3_t_remove_input(*args, **kwargs):
-        print('_o3_t_remove_input', pformat(args), pformat(kwargs))
-        process_filepath = kwargs['task_instance'].xcom_pull(task_ids='o3_t_get_input_file')[0]
-        remove(process_filepath)
-
-    t4 = PythonOperator(task_id='o3_t_remove_input', python_callable=_o3_t_remove_input, provide_context=True)
+    t4 = RemoveFileOperator(task_id='o3_t_remove_input',
+                            filepath=_get_t1_filepaths,
+                            fs_type='local')
 
     # Workflow!
     t0 >> s0 >> t1 >> [t2a, t2b] >> t3 >> t4
