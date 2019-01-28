@@ -26,6 +26,7 @@ from airflow.exceptions import AirflowSkipException
 from airflow.operators.python_operator import PythonOperator
 
 from o3.operators.ensure_dir_operator import EnsureDirOperator
+from o3.operators.move_file_operator import MoveFileOperator
 
 
 default_args = {
@@ -55,28 +56,21 @@ with DAG('o3_d_dag1', default_args=default_args,
                            paths=[FILE_INPUT_DIR, PROCESSING_DIR],
                            fs_type='local')
 
-    s0 = FileSensor(task_id='o3_s_scan_input_dir', fs_conn_id='fs_default',
-                    filepath=path.join(conf.AIRFLOW_HOME, 'input/'))
+    s0 = FileSensor(task_id='o3_s_scan_input_dir',
+                    fs_conn_id='fs_default',
+                    filepath=FILE_INPUT_DIR)
 
-    def _o3_t_get_input_file(*args, **kwargs):
-        print('_o3_t_get_input_file', pformat(args), pformat(kwargs))
-
-        filenames = list(glob(f'{FILE_INPUT_DIR}/*.txt'))
-        if len(filenames):
-            source_path = filenames[0]
-            target_path = f'{PROCESSING_DIR}/{ path.basename(filenames[0]) }'
-            print(f'Found input file { source_path }, moving to { target_path }.')
-            move(source_path, target_path)
-            return target_path
-        else:
-            raise AirflowSkipException('No files found.')
-
-    t1 = PythonOperator(task_id='o3_t_get_input_file', python_callable=_o3_t_get_input_file, provide_context=True,
-                        depends_on_past=True)
+    t1 = MoveFileOperator(task_id='o3_t_get_input_file',
+                          glob_pattern='*.txt',
+                          src_dir=FILE_INPUT_DIR,
+                          dest_dir=PROCESSING_DIR,
+                          fs_type='local',
+                          max_files=1,
+                          depends_on_past=True)
 
     def _o3_t_count_words(*args, **kwargs):
         print('_o3_t_count_words', pformat(args), pformat(kwargs))
-        process_filepath = kwargs['task_instance'].xcom_pull(task_ids='o3_t_get_input_file')
+        process_filepath = kwargs['task_instance'].xcom_pull(task_ids='o3_t_get_input_file')[0]
         sleep(5)
         with open(process_filepath, 'r', encoding='utf-8') as file_obj:
             spaces = file_obj.read().replace('\n', ' ').count(' ')
@@ -86,7 +80,7 @@ with DAG('o3_d_dag1', default_args=default_args,
 
     def _o3_t_count_rows(*args, **kwargs):
         print('__o3_t_count_rows', pformat(args), pformat(kwargs))
-        process_filepath = kwargs['task_instance'].xcom_pull(task_ids='o3_t_get_input_file')
+        process_filepath = kwargs['task_instance'].xcom_pull(task_ids='o3_t_get_input_file')[0]
         sleep(10)
         with open(process_filepath, 'r', encoding='utf-8') as file_obj:
             rows = len(file_obj.read().splitlines())
@@ -103,7 +97,7 @@ with DAG('o3_d_dag1', default_args=default_args,
 
     def _o3_t_remove_input(*args, **kwargs):
         print('_o3_t_remove_input', pformat(args), pformat(kwargs))
-        process_filepath = kwargs['task_instance'].xcom_pull(task_ids='o3_t_get_input_file')
+        process_filepath = kwargs['task_instance'].xcom_pull(task_ids='o3_t_get_input_file')[0]
         remove(process_filepath)
 
     t4 = PythonOperator(task_id='o3_t_remove_input', python_callable=_o3_t_remove_input, provide_context=True)

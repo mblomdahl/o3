@@ -30,8 +30,9 @@ from airflow.exceptions import AirflowSkipException
 from airflow.operators.python_operator import PythonOperator
 
 from o3.hooks.hdfs_hook import HDFSHook
-from o3.operators.ensure_dir_operator import EnsureDirOperator
 from o3.sensors.hdfs_sensor import HDFSSensor
+from o3.operators.ensure_dir_operator import EnsureDirOperator
+from o3.operators.move_file_operator import MoveFileOperator
 
 
 default_args = {
@@ -61,30 +62,23 @@ with DAG('o3_d_dag2', default_args=default_args, schedule_interval='@once',
                            paths=[FILE_INPUT_DIR, PROCESSING_DIR],
                            fs_type='hdfs')
 
-    s0 = HDFSSensor(task_id='o3_s_scan_input_dir', filepath=FILE_INPUT_DIR)
+    s0 = HDFSSensor(task_id='o3_s_scan_input_dir',
+                    hdfs_conn_id='hdfs_default',
+                    filepath=FILE_INPUT_DIR)
 
-    def _o3_t_get_input_file(*args, **kwargs):
-        print('_o3_t_get_input_file', pformat(args), pformat(kwargs))
-        hdfs = HDFSHook().get_conn()
-        filenames = hdfs.glob(f'{FILE_INPUT_DIR}/*.txt')
-        if len(filenames):
-            source_path = filenames[0]
-            target_path = f'{PROCESSING_DIR}/{ path.basename(filenames[0]) }'
-            print(f'Found file { source_path }, moving to { target_path }.')
-            hdfs.mv(source_path, target_path)
-            return target_path
-        else:
-            raise AirflowSkipException('No files found.')
-
-    t1 = PythonOperator(task_id='o3_t_get_input_file',
-                        python_callable=_o3_t_get_input_file,
-                        depends_on_past=True)
+    t1 = MoveFileOperator(task_id='o3_t_get_input_file',
+                          glob_pattern='*.txt',
+                          src_dir=FILE_INPUT_DIR,
+                          dest_dir=PROCESSING_DIR,
+                          fs_type='hdfs',
+                          max_files=1,
+                          depends_on_past=True)
 
     def _o3_t_count_words(*args, **kwargs):
         print('_o3_t_count_words', pformat(args), pformat(kwargs))
         hdfs = HDFSHook().get_conn()
         process_filepath = kwargs['task_instance'].xcom_pull(
-            task_ids='o3_t_get_input_file')
+            task_ids='o3_t_get_input_file')[0]
 
         sleep(5)
         with hdfs.open(process_filepath, 'rb') as file_obj:
@@ -100,7 +94,7 @@ with DAG('o3_d_dag2', default_args=default_args, schedule_interval='@once',
         print('__o3_t_count_rows', pformat(args), pformat(kwargs))
         hdfs = HDFSHook().get_conn()
         process_filepath = kwargs['task_instance'].xcom_pull(
-            task_ids='o3_t_get_input_file')
+            task_ids='o3_t_get_input_file')[0]
 
         sleep(10)
         with hdfs.open(process_filepath, 'rb') as file_obj:
@@ -126,7 +120,7 @@ with DAG('o3_d_dag2', default_args=default_args, schedule_interval='@once',
         print('_o3_t_remove_input', pformat(args), pformat(kwargs))
         hdfs = HDFSHook().get_conn()
         process_filepath = kwargs['task_instance'].xcom_pull(
-            task_ids='o3_t_get_input_file')
+            task_ids='o3_t_get_input_file')[0]
 
         hdfs.rm(process_filepath)
 

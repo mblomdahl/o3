@@ -27,7 +27,7 @@ class EnsureDirOperator(BaseOperator):
         self.paths = paths
         self.fs_type = fs_type
 
-    def execute(self, _):
+    def execute(self, **_):
         if self.fs_type == 'local':
             for path_ in self.paths:
                 if os.path.isdir(path_):
