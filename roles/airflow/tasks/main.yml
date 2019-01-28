@@ -114,7 +114,7 @@
       tags: airflow
 
     - name: ensure conda environment is created based on environment.yml file (first attempt)
-      shell: '/home/airflow/anaconda3/bin/conda env create --name o3 --yes python=3.6 -f /home/airflow/o3/environment.yml'
+      shell: '/home/airflow/anaconda3/bin/conda env create --name o3 python=3.6 -f /home/airflow/o3/environment.yml'
       become: yes
       become_user: airflow
       ignore_errors: true
@@ -123,7 +123,7 @@
       tags: airflow
 
     - name: ensure conda environment is created based on environment.yml file
-      shell: '/home/airflow/anaconda3/bin/conda env create --name o3 --yes python=3.6 -f /home/airflow/o3/environment.yml'
+      shell: '/home/airflow/anaconda3/bin/conda env create --name o3 python=3.6 -f /home/airflow/o3/environment.yml'
       become: yes
       become_user: airflow
       when: not anaconda_dir.stat.exists and ensure_conda_environment_is_created.failed
