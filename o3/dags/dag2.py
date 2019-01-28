@@ -26,13 +26,14 @@ from pprint import pformat
 from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.exceptions import AirflowSkipException
 from airflow.operators.python_operator import PythonOperator
 
 from o3.hooks.hdfs_hook import HDFSHook
 from o3.sensors.hdfs_sensor import HDFSSensor
 from o3.operators.ensure_dir_operator import EnsureDirOperator
 from o3.operators.move_file_operator import MoveFileOperator
+from o3.operators.word_count_operator import WordCountOperator
+from o3.operators.row_count_operator import RowCountOperator
 
 
 default_args = {
@@ -74,36 +75,16 @@ with DAG('o3_d_dag2', default_args=default_args, schedule_interval='@once',
                           max_files=1,
                           depends_on_past=True)
 
-    def _o3_t_count_words(*args, **kwargs):
-        print('_o3_t_count_words', pformat(args), pformat(kwargs))
-        hdfs = HDFSHook().get_conn()
-        process_filepath = kwargs['task_instance'].xcom_pull(
-            task_ids='o3_t_get_input_file')[0]
+    def _get_t1_filepaths(**kwargs):
+        return kwargs['ti'].xcom_pull(task_ids='o3_t_get_input_file')
 
-        sleep(5)
-        with hdfs.open(process_filepath, 'rb') as file_obj:
-            spaces = file_obj.read().decode('utf-8').replace(
-                '\n', ' ').count(' ')
-            return f'counted {spaces + 1} words'
+    t2a = WordCountOperator(task_id='o3_t_count_words',
+                            filepath=_get_t1_filepaths,
+                            fs_type='hdfs')
 
-    t2a = PythonOperator(task_id='o3_t_count_words',
-                         python_callable=_o3_t_count_words,
-                         provide_context=True)
-
-    def _o3_t_count_rows(*args, **kwargs):
-        print('__o3_t_count_rows', pformat(args), pformat(kwargs))
-        hdfs = HDFSHook().get_conn()
-        process_filepath = kwargs['task_instance'].xcom_pull(
-            task_ids='o3_t_get_input_file')[0]
-
-        sleep(10)
-        with hdfs.open(process_filepath, 'rb') as file_obj:
-            rows = len(file_obj.read().decode('utf-8').splitlines())
-            return f'found {rows} rows'
-
-    t2b = PythonOperator(task_id='o3_t_count_rows',
-                         python_callable=_o3_t_count_rows,
-                         provide_context=True)
+    t2b = RowCountOperator(task_id='o3_t_count_rows',
+                           filepath=_get_t1_filepaths,
+                           fs_type='hdfs')
 
     def _o3_t_summarize(*args, **kwargs):
         print('_o3_t_summarize', pformat(args), pformat(kwargs))
