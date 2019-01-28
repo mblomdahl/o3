@@ -7,11 +7,7 @@ EnvironmentFile=/home/airflow/airflow-environment
 User=airflow
 Group=airflow
 Type=simple
-{% if ansible_distribution == 'Ubuntu' %}
-ExecStart=/bin/bash -c 'source /home/airflow/pyenv/bin/activate; airflow webserver -p 8080'
-{% elif ansible_distribution == 'CentOS' %}
-ExecStart=/bin/bash -c 'scl enable rh-python36 "source /home/airflow/pyenv/bin/activate; airflow webserver -p 8080"'
-{% endif %}
+ExecStart=/bin/bash -c '/home/airflow/anaconda3/bin/conda activate o3; airflow webserver -p 8080'
 RestartSec=5s
 
 [Install]
