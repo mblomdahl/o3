@@ -53,11 +53,8 @@
   tags: common
 
 - name: set up authorized_keys for hadoop user
-  authorized_key: user=hadoop key="{{ item }}"
-  with_file:
-    - public_keys/hadoop_id_rsa.pub
-    - public_keys/mblomdahl_id_rsa.pub
-    - public_keys/cbackstrom_id_rsa.pub
+  authorized_key: user=hadoop key="{{ lookup('file', 'public_keys/' + item + '_id_rsa.pub') }}"
+  with_items: "{{ ['hadoop'] + hadoop_admins }}"
   tags: common
 
 - name: add private key for hadoop user
@@ -113,6 +110,7 @@
     group: hadoop
     remote_src: no
     creates: /usr/local/hadoop-2.9.2
+  register: extract_hadoop_tarball
   tags: common
 
 - name: remove useless .cmd executables in hadoop-2.9.2/sbin and /bin
@@ -131,6 +129,7 @@
     - bin/hdfs.cmd
     - bin/mapred.cmd
     - bin/yarn.cmd
+  when: extract_hadoop_tarball is changed
   tags: common
 
 - name: extract spark tarball
@@ -141,6 +140,7 @@
     group: hadoop
     remote_src: no
     creates: /usr/local/spark-2.4.0-bin-hadoop2.7
+  register: extract_spark_tarball
   tags: common
 
 - name: remove useless .cmd executables in spark-2.4.0-bin-hadoop2.7/bin
@@ -164,6 +164,7 @@
     - bin/spark-submit2.cmd
     - bin/sparkR.cmd
     - bin/sparkR2.cmd
+  when: extract_spark_tarball is changed
   tags: common
 
 - name: create root log dir for hadoop user services
