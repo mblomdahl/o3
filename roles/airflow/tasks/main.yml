@@ -147,6 +147,8 @@
              pip install -e /home/airflow/o3'
       become: yes
       become_user: airflow
+      register: ensure_o3_package_is_installed
+      changed_when: "'Found existing installation: o3' not in ensure_o3_package_is_installed.stdout"
       notify:
         - airflow initdb
         - restart airflow-webserver
