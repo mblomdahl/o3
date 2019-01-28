@@ -7,7 +7,7 @@ EnvironmentFile=/home/airflow/airflow-environment
 User=airflow
 Group=airflow
 Type=simple
-ExecStart=/bin/bash -c '/home/airflow/anaconda3/bin/conda activate o3; airflow scheduler'
+ExecStart=/bin/bash -l -c '/home/airflow/anaconda3/envs/o3/bin/airflow scheduler'
 RestartSec=5s
 
 [Install]

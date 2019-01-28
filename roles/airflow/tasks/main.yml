@@ -150,6 +150,12 @@
     - restart airflow-scheduler
   tags: airflow
 
+- name: editable pip install for o3
+  shell: bash -l -c 'conda activate o3 && pip install -e /home/airflow/o3'
+  become: yes
+  become_user: airflow
+  when: o3_pip_install_requirements is changed
+  tags: airflow
 
 - name: template airflow-environment
   template:
