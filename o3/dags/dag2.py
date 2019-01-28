@@ -73,8 +73,8 @@ with DAG('o3_d_dag2', default_args=default_args, schedule_interval='@once',
                           max_files=1,
                           depends_on_past=True)
 
-    def _get_t1_filepaths(**kwargs):
-        return kwargs['ti'].xcom_pull(task_ids='o3_t_get_input_file')
+    def _get_t1_filepaths(**ctx):
+        return ctx['ti'].xcom_pull(task_ids='o3_t_get_input_file')
 
     t2a = WordCountOperator(task_id='o3_t_count_words',
                             filepath=_get_t1_filepaths,
@@ -84,10 +84,9 @@ with DAG('o3_d_dag2', default_args=default_args, schedule_interval='@once',
                            filepath=_get_t1_filepaths,
                            fs_type='hdfs')
 
-    def _o3_t_summarize(**kwargs):
-        words, rows = kwargs['task_instance'].xcom_pull(
+    def _o3_t_summarize(**ctx):
+        words, rows = ctx['task_instance'].xcom_pull(
             task_ids=['o3_t_count_words', 'o3_t_count_rows'])
-
         return f'summary: {words} / {rows}'
 
     t3 = PythonOperator(task_id='o3_t_summarize',

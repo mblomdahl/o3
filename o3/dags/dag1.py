@@ -77,8 +77,8 @@ with DAG('o3_d_dag1', default_args=default_args,
                            filepath=_get_t1_filepaths,
                            fs_type='local')
 
-    def _o3_t_summarize(**kwargs):
-        words, rows = kwargs['task_instance'].xcom_pull(
+    def _o3_t_summarize(**ctx):
+        words, rows = ctx['task_instance'].xcom_pull(
             task_ids=['o3_t_count_words', 'o3_t_count_rows'])
         return f'summary: {words} / {rows}'
 
