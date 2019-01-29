@@ -70,7 +70,7 @@
   become_user: airflow
   tags: airflow
 
-- name: ensure anacoda installation file is present on target system
+- name: ensure anacoda3 installer is present on target system
   copy:
     src: resources/Anaconda3-2018.12-Linux-x86_64.sh
     dest: /tmp/Anaconda3-2018.12-Linux-x86_64.sh
@@ -95,21 +95,21 @@
     creates: /home/airflow/anaconda3
   become: yes
   become_user: airflow
-  register: ensure_anacoda_is_installed
+  register: anaconda3_installed
   tags: airflow
 
 - name: ensure conda is up-to-date
   shell: '/home/airflow/anaconda3/bin/conda update -y conda'
   become: yes
   become_user: airflow
-  when: ensure_anacoda_is_installed is changed
+  when: anaconda3_installed is changed
   tags: airflow
 
 - name: ensure conda is initialized
   shell: '/home/airflow/anaconda3/bin/conda init bash'
   become: yes
   become_user: airflow
-  when: ensure_anacoda_is_installed is changed
+  when: anaconda3_installed is changed
   tags: airflow
 
 - name: deactivate conda base env in in {{ bash_profile_file }}
