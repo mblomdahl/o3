@@ -62,61 +62,80 @@
 
 - name: checkout code base
   git:
-    repo: https://github.com/mblomdahl/o3.git
-    version: feature/dag2
+    repo: https://github.com/carlba/o3
+    version: feature/anaconda-ubuntu-support
     dest: /home/airflow/o3
     accept_hostkey: yes
   become: yes
   become_user: airflow
   tags: airflow
 
-- block:
-    - name: create airflow python3 virtualenv (Ubuntu)
-      shell: python3 -m venv /home/airflow/pyenv
-      args:
-        creates: /home/airflow/pyenv
-      become: yes
-      become_user: airflow
-      tags: airflow
+- name: ensure anacoda installation tmp dir exist on target system
+  file:
+    path: '/home/airflow/install/anaconda'
+    state: directory
+    owner: airflow
+  tags: airflow
 
-    - name: install pip requirements.txt (Ubuntu)
-      shell: SLUGIFY_USES_TEXT_UNIDECODE=yes /home/airflow/pyenv/bin/pip install
-             -r /home/airflow/o3/requirements.txt
-      become: yes
-      become_user: airflow
-      register: pyenv_pip_install_requirements
-      changed_when: "'Successfully ' in pyenv_pip_install_requirements.stdout"
-      notify:
-        - airflow initdb
-        - restart airflow-webserver
-        - restart airflow-scheduler
-      tags: airflow
+- name: ensure anacoda installation file is present on target system
+  copy:
+    src: resources/Anaconda3-2018.12-Linux-x86_64.sh
+    dest: '/home/airflow/install/anaconda'
+    owner: airflow
+    mode: u+x,g+x
+  tags: airflow
 
-  when: ansible_distribution == 'Ubuntu'
+- name: ensure anacoda is installed
+  shell: '/home/airflow/install/anaconda/Anaconda3-2018.12-Linux-x86_64.sh -b'
+  args:
+    creates: /home/airflow/anaconda3
+  become: yes
+  become_user: airflow
+  register: ensure_anacoda_is_installed
+  tags: airflow
 
-- block:
-    - name: create airflow python3 virtualenv (CentOS)
-      shell: scl enable rh-python36 'virtualenv -p python3 /home/airflow/pyenv'
-      args:
-        creates: /home/airflow/pyenv
-      become: yes
-      become_user: airflow
-      tags: airflow
+- name: ensure conda is updated
+  shell: '/home/airflow/anaconda3/bin/conda update -y conda'
+  become: yes
+  become_user: airflow
+  when: ensure_anacoda_is_installed.changed
+  tags: airflow
 
-    - name: install pip requirements (CentOS)
-      shell: scl enable rh-python36 'SLUGIFY_USES_TEXT_UNIDECODE=yes
-             /home/airflow/pyenv/bin/pip install -r /home/airflow/o3/requirements.txt'
-      become: yes
-      become_user: airflow
-      register: scl_pip_install_requirements
-      changed_when: "'Successfully ' in scl_pip_install_requirements.stdout"
-      notify:
-        - airflow initdb
-        - restart airflow-webserver
-        - restart airflow-scheduler
-      tags: airflow
+- name: ensure conda is initialized
+  shell: '/home/airflow/anaconda3/bin/conda init bash'
+  become: yes
+  become_user: airflow
+  when: ensure_anacoda_is_installed.changed
+  tags: airflow
 
-  when: ansible_distribution == 'CentOS'
+- name: ensure conda environment is created based on environment.yml file (first attempt)
+  shell: '/home/airflow/anaconda3/bin/conda env create --name o3 python=3.6 -f /home/airflow/o3/environment-linux.yml'
+  become: yes
+  become_user: airflow
+  ignore_errors: true
+  register: ensure_conda_environment_is_created
+  when: ensure_anacoda_is_installed.changed
+  tags: airflow
+
+- name: ensure conda environment is created based on environment.yml file
+  shell: '/home/airflow/anaconda3/bin/conda env create --name o3 python=3.6 -f /home/airflow/o3/environment-linux.yml'
+  become: yes
+  become_user: airflow
+  when: ensure_anacoda_is_installed.changed and ensure_conda_environment_is_created.failed
+  tags: airflow
+
+- name: ensure o3 package is installed within the anacoda environment o3
+  shell: bash -lc 'source /home/airflow/anaconda3/bin/activate o3;
+         pip install -e /home/airflow/o3'
+  become: yes
+  become_user: airflow
+  register: ensure_o3_package_is_installed
+  changed_when: "'Found existing installation: o3' not in ensure_o3_package_is_installed.stdout"
+  notify:
+    - airflow initdb
+    - restart airflow-webserver
+    - restart airflow-scheduler
+  tags: airflow
 
 - name: template airflow-environment
   template:

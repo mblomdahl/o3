@@ -81,7 +81,7 @@
   tags: hive
 
 - name: check if schema is initialized
-  shell: docker exec -i hive_mariadb /usr/bin/mysql -u root -p'{{ hive_db_root_password }}'
+  shell: docker exec -i hive_mariadb /usr/bin/mysql -u root -h127.0.0.1 -p'{{ hive_db_root_password }}'
          -e 'use hive; show tables;'
   register: hive_mariadb_tables
   changed_when: (hive_mariadb_tables.stdout_lines | length) == 0
