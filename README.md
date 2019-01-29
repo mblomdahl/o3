@@ -15,17 +15,30 @@ First setup [conda](https://conda.io/projects/conda/en/latest/) with Python 3.6,
     wget -P resources/ http://apache.mirrors.spacedump.net/hadoop/common/hadoop-2.9.2/hadoop-2.9.2.tar.gz
     wget -P resources/ http://apache.mirrors.spacedump.net/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz
     wget -P resources/ http://apache.mirrors.spacedump.net/hive/hive-2.3.4/apache-hive-2.3.4-bin.tar.gz
-    wget -P resources/ https://repo.anaconda.com/archive/Anaconda3-5.2.0-Linux-x86_64.sh
-    conda create --name o3 --yes python=3.6
-    conda activate o3
-    conda install --name o3 --file spec-file-osx.txt
-    SLUGIFY_USES_TEXT_UNIDECODE=yes pip install -r requirements.txt
-    pip install -e .
+    wget -P resources/ https://repo.continuum.io/archive/Anaconda3-2018.12-Linux-x86_64.sh
+    conda env create --name o3 python=3.6 -f environment-macos.yml
+    conda activate o3; pip install -e .
     export AIRFLOW_HOME=$(pwd)/airflow_home
     airflow initdb
     # Update newly-generated airflow.cfg in AIRFLOW_HOME by setting `dags_folder=$(pwd)/o3/dags`.
     airflow webserver -p 8080
+    
+    
+Creating the Conda Environment File
+-----------------------------------
 
+These commands needs to be executed on the target platform. The output file can then replace the
+corresponding file in this repo, i.e. `environment-linux.yml` and `environment-macos.yml`:
+
+    conda create --name o3 --yes python=3.6
+    conda install --name o3 -c conda-forge --yes psycopg2 hdfs3 airflow libhdfs3=2.3.0=1 ansible netaddr ipython pandas
+    conda env export --name o3 > environment-<platform>.yml
+
+
+Provisioning
+------------
+
+    ansible-playbook -i inventories/<inventory>.ini provision.yml
 
 
 Links

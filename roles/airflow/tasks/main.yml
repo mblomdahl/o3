@@ -70,29 +70,54 @@
   become_user: airflow
   tags: airflow
 
-- name: upload anaconda3 installer
+- name: ensure anacoda installation file is present on target system
   copy:
-    src: resources/Anaconda3-5.2.0-Linux-x86_64.sh
-    dest: /tmp/Anaconda3-5.2.0-Linux-x86_64.sh
+    src: resources/Anaconda3-2018.12-Linux-x86_64.sh
+    dest: /tmp/Anaconda3-2018.12-Linux-x86_64.sh
     owner: airflow
-    group: airflow
-    mode: 0755
+    mode: u+x,g+x
   tags: airflow
 
-- name: run anaconda3 installer
-  shell: /tmp/Anaconda3-5.2.0-Linux-x86_64.sh -b -f -s
-  args:
-    creates: /home/airflow/anaconda3
-  become: yes
-  become_user: airflow
-  tags: airflow
-
-- name: anaconda3 shell setup
+- name: anaconda3 shell setup (clean-up)
   blockinfile:
     dest: /home/airflow/.bashrc
     marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-anaconda3"
     block: |
       . /home/airflow/anaconda3/etc/profile.d/conda.sh
+    state: absent
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: ensure anacoda3 is installed
+  shell: /tmp/Anaconda3-2018.12-Linux-x86_64.sh -b
+  args:
+    creates: /home/airflow/anaconda3
+  become: yes
+  become_user: airflow
+  register: ensure_anacoda_is_installed
+  tags: airflow
+
+- name: ensure conda is up-to-date
+  shell: '/home/airflow/anaconda3/bin/conda update -y conda'
+  become: yes
+  become_user: airflow
+  when: ensure_anacoda_is_installed is changed
+  tags: airflow
+
+- name: ensure conda is initialized
+  shell: '/home/airflow/anaconda3/bin/conda init bash'
+  become: yes
+  become_user: airflow
+  when: ensure_anacoda_is_installed is changed
+  tags: airflow
+
+- name: deactivate conda base env in in {{ bash_profile_file }}
+  blockinfile:
+    path: /home/airflow/{{ bash_profile_file }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-conda"
+    block: |
+      conda deactivate
   become: yes
   become_user: airflow
   tags: airflow
@@ -109,52 +134,39 @@
   register: dot_conda_dirs
   tags: airflow
 
-- name: create ~/.conda/environments.txt
+- name: create ~/.conda/environments.txt and ~/anaconda3/envs/.conda_envs_dir_test
   file:
-    path: /home/airflow/.conda/environments.txt
+    path: /home/airflow/{{ item }}
     state: touch
     mode: 0664
   become: yes
   become_user: airflow
+  with_items:
+    - .conda/environments.txt
+    - anaconda3/envs/.conda_envs_dir_test
   when: dot_conda_dirs is changed
   tags: airflow
 
-- name: create airflow conda virtualenv
-  shell: bash -l -c '/home/airflow/anaconda3/bin/conda
-         create --name o3 --yes python=3.6'
+- name: ensure conda environment is created based on environment-linux.yml
+  shell: /home/airflow/anaconda3/bin/conda env create --name o3 python=3.6
+         -f /home/airflow/o3/environment-linux.yml
   args:
     creates: /home/airflow/anaconda3/envs/o3
   become: yes
   become_user: airflow
-  register: conda_o3_env
   tags: airflow
 
-- name: install spec-file-linux
-  shell: bash -l -c 'conda activate o3 && conda install --name o3
-         --file ~/o3/spec-file-linux.txt'
+- name: ensure o3 package is installed within the o3 conda environment
+  shell: bash -l -c 'source /home/airflow/anaconda3/bin/activate o3;
+         pip install -e /home/airflow/o3'
   become: yes
   become_user: airflow
-  when: conda_o3_env is changed
-  tags: airflow
-
-- name: install pip requirements.txt
-  shell: bash -l -c 'conda activate o3 && SLUGIFY_USES_TEXT_UNIDECODE=yes
-         pip install -r /home/airflow/o3/requirements.txt'
-  become: yes
-  become_user: airflow
-  register: o3_pip_install_requirements
-  changed_when: "'Successfully ' in o3_pip_install_requirements.stdout"
+  register: o3_package_installed
+  changed_when: "'Found existing installation: o3' not in o3_package_installed.stdout"
   notify:
     - airflow initdb
     - restart airflow-webserver
     - restart airflow-scheduler
-  tags: airflow
-
-- name: editable pip install for o3
-  shell: bash -l -c 'conda activate o3 && pip install -e /home/airflow/o3'
-  become: yes
-  become_user: airflow
-  when: o3_pip_install_requirements is changed
   tags: airflow
 
 - name: template airflow-environment
