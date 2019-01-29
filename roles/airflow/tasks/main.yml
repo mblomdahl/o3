@@ -98,30 +98,6 @@
   register: anaconda3_installed
   tags: airflow
 
-- name: ensure conda is up-to-date
-  shell: '/home/airflow/anaconda3/bin/conda update -y conda'
-  become: yes
-  become_user: airflow
-  when: anaconda3_installed is changed
-  tags: airflow
-
-- name: ensure conda is initialized
-  shell: '/home/airflow/anaconda3/bin/conda init bash'
-  become: yes
-  become_user: airflow
-  when: anaconda3_installed is changed
-  tags: airflow
-
-- name: deactivate conda base env in in {{ bash_profile_file }}
-  blockinfile:
-    path: /home/airflow/{{ bash_profile_file }}
-    marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-conda"
-    block: |
-      conda deactivate
-  become: yes
-  become_user: airflow
-  tags: airflow
-
 - name: create ~/.conda/pkgs
   file:
     path: /home/airflow/{{ item }}
@@ -147,9 +123,34 @@
   when: dot_conda_dirs is changed
   tags: airflow
 
+- name: ensure conda is up-to-date
+  shell: /home/airflow/anaconda3/bin/conda update -y conda
+  become: yes
+  become_user: airflow
+  when: anaconda3_installed is changed
+  tags: airflow
+
+- name: ensure conda is initialized
+  shell: /home/airflow/anaconda3/bin/conda init bash
+  become: yes
+  become_user: airflow
+  when: anaconda3_installed is changed
+  tags: airflow
+
+- name: deactivate conda base env in in {{ bash_profile_file }}
+  blockinfile:
+    path: /home/airflow/{{ bash_profile_file }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-conda"
+    block: |
+      conda deactivate
+  become: yes
+  become_user: airflow
+  when: ansible_distribution == 'CentOS'
+  tags: airflow
+
 - name: ensure conda environment is created based on environment-linux.yml
-  shell: /home/airflow/anaconda3/bin/conda env create --name o3 python=3.6
-         -f /home/airflow/o3/environment-linux.yml
+  shell: bash -l -c 'source /home/airflow/anaconda3/bin/activate && conda env
+         create --name o3 python=3.6 -f /home/airflow/o3/environment-linux.yml'
   args:
     creates: /home/airflow/anaconda3/envs/o3
   become: yes
@@ -157,7 +158,7 @@
   tags: airflow
 
 - name: ensure o3 package is installed within the o3 conda environment
-  shell: bash -l -c 'source /home/airflow/anaconda3/bin/activate o3;
+  shell: bash -l -c 'source /home/airflow/anaconda3/bin/activate o3 &&
          pip install -e /home/airflow/o3'
   become: yes
   become_user: airflow
