@@ -62,8 +62,8 @@
 
 - name: checkout code base
   git:
-    repo: https://github.com/mblomdahl/o3.git
-    version: feature/dag2
+    repo: https://github.com/carlba/o3
+    version: feature/anaconda-ubuntu-support
     dest: /home/airflow/o3
     accept_hostkey: yes
   become: yes
@@ -114,7 +114,7 @@
       tags: airflow
 
     - name: ensure conda environment is created based on environment.yml file (first attempt)
-      shell: '/home/airflow/anaconda3/bin/conda env create --name o3 python=3.6 -f /home/airflow/o3/environment.yml'
+      shell: '/home/airflow/anaconda3/bin/conda env create --name o3 python=3.6 -f /home/airflow/o3/environment-linux.yml'
       become: yes
       become_user: airflow
       ignore_errors: true
@@ -123,23 +123,10 @@
       tags: airflow
 
     - name: ensure conda environment is created based on environment.yml file
-      shell: '/home/airflow/anaconda3/bin/conda env create --name o3 python=3.6 -f /home/airflow/o3/environment.yml'
+      shell: '/home/airflow/anaconda3/bin/conda env create --name o3 python=3.6 -f /home/airflow/o3/environment-linux'
       become: yes
       become_user: airflow
       when: not anaconda_dir.stat.exists and ensure_conda_environment_is_created.failed
-      tags: airflow
-
-    - name: install pip requirements.txt (Ubuntu)
-      shell: bash -lc 'source /home/airflow/anaconda3/bin/activate o3;
-             SLUGIFY_USES_TEXT_UNIDECODE=yes pip install -r /home/airflow/o3/requirements.txt'
-      become: yes
-      become_user: airflow
-      register: pyenv_pip_install_requirements
-      changed_when: "'Successfully ' in pyenv_pip_install_requirements.stdout"
-      notify:
-        - airflow initdb
-        - restart airflow-webserver
-        - restart airflow-scheduler
       tags: airflow
 
     - name: ensure o3 package is installed withing the anacoda environment o3
