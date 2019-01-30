@@ -1,7 +1,7 @@
 ---
 
 - name: airflow initdb
-  shell: bash -lc 'source /home/airflow/anaconda3/bin/activate o3 && airflow initdb'
+  shell: bash -ilc 'conda activate o3 && airflow initdb'
   become: yes
   become_user: airflow
   register: airflow_initdb

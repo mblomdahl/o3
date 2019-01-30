@@ -24,24 +24,22 @@ First setup [conda](https://conda.io/projects/conda/en/latest/) with Python 3.6,
     airflow webserver -p 8080
     
     
-Creating the Conda environment files
-------------------------------------
+Creating the Conda Environment File
+-----------------------------------
 
 These commands needs to be executed on the target platform. The output file can then replace the
-corresponding file in this repo. I.E `environment-linux.yml` and `environment-macos.yml`,
+corresponding file in this repo, i.e. `environment-linux.yml` and `environment-macos.yml`:
 
-```bash
-conda create --name o3 --yes python=3.6
-conda install --name o3 -c conda-forge --yes psycopg2 hdfs3 airflow libhdfs3=2.3.0=1 ansible netaddr ipython pandas
-conda env export --name o3 > environment-<platform>.yml
- 
-```
+    conda create --name o3 --yes python=3.6
+    conda install --name o3 -c conda-forge --yes psycopg2 hdfs3 airflow libhdfs3=2.3.0=1 ansible netaddr ipython pandas
+    conda env export --name o3 > environment-<platform>.yml
 
 
 Provisioning
 ------------
-  
+
     ansible-playbook -i inventories/<inventory>.ini provision.yml
+
 
 Links
 -----
