@@ -145,7 +145,6 @@
       conda deactivate
   become: yes
   become_user: airflow
-  when: ansible_distribution == 'CentOS'
   tags: airflow
 
 - name: ensure conda environment is created based on environment-linux.yml
