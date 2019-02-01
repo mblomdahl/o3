@@ -9,7 +9,6 @@ dependencies:
   - appdirs=1.4.3=py_1
   - appnope=0.1.0=py36_1000
   - asn1crypto=0.24.0=py36_1003
-  - avro=1.8.2=h34e3fff_1000
   - babel=2.6.0=py_1
   - backcall=0.1.0=py_0
   - bcrypt=3.1.4=py36h470a237_0
@@ -59,7 +58,6 @@ dependencies:
   - ipython_genutils=0.2.0=py_1
   - iso8601=0.1.12=py_1
   - itsdangerous=1.1.0=py_0
-  - jansson=2.11=h1de35cc_1001
   - jedi=0.13.2=py36_1000
   - jinja2=2.8=py36_1
   - jmespath=0.9.3=py_1
@@ -146,7 +144,6 @@ dependencies:
   - simplejson=3.16.1=py36h470a237_0
   - six=1.12.0=py36_1000
   - smmap2=2.0.5=py_0
-  - snappy=1.1.7=h0a44026_1002
   - sqlalchemy=1.1.18=py36h470a237_0
   - sqlite=3.26.0=ha441bb4_0
   - stevedore=1.29.0=py_0
