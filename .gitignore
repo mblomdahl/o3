@@ -22,4 +22,6 @@ ci-*
 .vault-pass
 
 *.egg-info/
+logs/
+resources/*.sh
 airflow_home/*
