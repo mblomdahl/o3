@@ -40,10 +40,13 @@
   become_user: airflow
   tags: airflow
 
-- name: ensure ~/airflow_home dir exists
+- name: ensure airflow ~/airflow_home and ~/o3 dirs exists
   file:
-    path: /home/airflow/airflow_home
+    path: /home/airflow/{{ item }}
     state: directory
+  with_items:
+    - airflow_home
+    - o3
   become: yes
   become_user: airflow
   tags: airflow
@@ -60,14 +63,16 @@
     - restart airflow-scheduler
   tags: airflow
 
-- name: ensure latest code base is checked out
-  git:
-    repo: https://github.com/mblomdahl/o3.git
-    version: feature/conda
-    dest: /home/airflow/o3
-    accept_hostkey: yes
+- name: ensure latest code base is copied to remote server
+  copy:
+    src: '{{ item }}'
+    dest: /home/airflow/o3/{{ item }}
   become: yes
   become_user: airflow
+  with_items:
+    - setup.py
+    - o3/
+    - environment-linux.yml
   tags: airflow
 
 - name: ensure anacoda3 installer is present on target system
