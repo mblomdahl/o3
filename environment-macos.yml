@@ -5,7 +5,7 @@ channels:
 dependencies:
   - airflow=1.10.1=py36_0
   - alembic=0.8.10=py36_1
-  - ansible=2.7.5=py36_0
+  - ansible=2.7.5=py36_1
   - appdirs=1.4.3=py_1
   - appnope=0.1.0=py36_1000
   - asn1crypto=0.24.0=py36_1003
@@ -27,12 +27,14 @@ dependencies:
   - croniter=0.3.25=py_0
   - cryptography=2.3.1=py36hdbc3d79_1000
   - curl=7.61.0=h93b3f91_2
+  - cyrus-sasl=2.1.26=h9af42da_3
   - debtcollector=1.20.0=py36_1000
   - decorator=4.3.2=py_0
   - defusedxml=0.5.0=py_1
   - dill=0.2.9=py36_0
   - dogpile.cache=0.7.1=py_1000
   - extras=1.0.0=py_1
+  - fastavro=0.21.17=py36h1de35cc_0
   - fixtures=3.0.0=py_0
   - flask=0.12.4=py_0
   - flask-admin=1.4.1=py36_0
@@ -120,6 +122,7 @@ dependencies:
   - pycparser=2.19=py_0
   - pycrypto=2.6.1=py36h1de35cc_1002
   - pygments=2.3.1=py_0
+  - pyhive=0.6.1=py36_0
   - pynacl=1.3.0=py36h1de35cc_1000
   - pyopenssl=18.0.0=py36_1000
   - pyparsing=2.3.1=py_0
@@ -138,6 +141,7 @@ dependencies:
   - readline=7.0=h1de35cc_5
   - requests=2.21.0=py36_1000
   - requestsexceptions=1.4.0=py_0
+  - sasl=0.2.1=py36h0a44026_1001
   - setproctitle=1.1.10=py36h1de35cc_1001
   - setuptools=40.6.3=py36_0
   - shade=1.30.0=py36_1001
@@ -151,6 +155,7 @@ dependencies:
   - tenacity=4.8.0=py36_0
   - testtools=2.3.0=py_1
   - thrift=0.11.0=py36h0a44026_1001
+  - thrift_sasl=0.3.0=py36h1de35cc_1001
   - tk=8.6.8=ha441bb4_0
   - traitlets=4.3.2=py36_1000
   - tzlocal=1.5.1=py_0
@@ -167,3 +172,5 @@ dependencies:
   - yaml=0.1.7=h1de35cc_1001
   - zlib=1.2.11=h1de35cc_3
   - zope.deprecation=4.4.0=py_0
+prefix: /Users/mblomdahl/bin/anaconda3/envs/o3
+
