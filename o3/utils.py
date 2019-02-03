@@ -187,3 +187,176 @@ def split_log_by_classifier(log_path: str, classifiers: [str]) -> dict:
             'lines_out': lines_out
         }
     }
+
+
+def convert_to_avro(schema_path: str, log_path: str,
+                    output_path: str = None,
+                    delete_existing_avro_file: bool = True,
+                    validate_percentage: float = 100.0,
+                    avro_batch_size: int = 2000,
+                    max_lines: int = None) -> dict:
+    """Converts a log file to Avro format."""
+
+    t0 = time.time()
+
+    def _get_output_path(input_path: str):
+        if input_path.endswith('.bz2') or log_path.endswith('.gz'):
+            return f'{os.path.splitext(log_path)[0]}.avro'
+        else:
+            return f'{log_path}.avro'
+
+    if not output_path:
+        output_path = _get_output_path(log_path)
+
+    print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
+          f'Converting log file {log_path!r} '
+          f'to Avro file {output_path!r} '
+          f'using schema {schema_path!r} '
+          f'and {validate_percentage} % output validation '
+          f'(PID {os.getpid()})...')
+
+    with open(schema_path, 'rb') as schema_file:
+        avro_schema = parse_schema(json.loads(schema_file.read()))
+
+    if delete_existing_avro_file and os.path.exists(output_path):
+        os.remove(output_path)
+
+    records, records_validated, batch_sizes = [], 0, []
+
+    def _write_avro_output():
+        if not os.path.exists(output_path):
+            with open(output_path, 'wb') as avro_file:
+                writer(avro_file, avro_schema, records, codec='deflate')
+        else:
+            with open(output_path, 'a+b') as avro_file:
+                writer(avro_file, avro_schema, records, codec='deflate')
+        batch_sizes.append(len(records))
+        print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
+              f'Wrote {len(records)} records '
+              f'in batch {str(len(batch_sizes)).zfill(4)} '
+              f'to {output_path!r} (PID {os.getpid()}).')
+        records.clear()
+
+    log_file = open_log_file(log_path)
+    lines_in, lines_ignored, decode_errors, validation_errors = 0, 0, 0, 0
+    typecasting = {
+        'field_238_to_int': 0,
+        'field_256_to_int': 0,
+        'field_256_to_null': 0,
+        'field_255_to_str': 0,
+        'field_255_to_null': 0
+    }
+
+    for log_line in log_file:
+        lines_in += 1
+        if max_lines and lines_in >= max_lines:
+            break
+
+        try:
+            server_date, versionstring, token, ip, raw_json_data = \
+                log_line.decode().split('\t', maxsplit=5)
+            if raw_json_data == '{"d":}\n':
+                lines_ignored += 1
+                continue
+
+            json_data = json.loads(raw_json_data)['d']
+            if len(json_data) != 7:
+                raise ValueError(f'Data is not a 7-tuple ({json_data!r}).')
+
+            (log_format, client_date_orig, project_id, version, uuid,
+             event_name, fields) = json_data
+
+            tz_offset = client_date_orig[-6:]
+            if len(tz_offset) != 6 and tz_offset.startsWith(('-', '+')):
+                raise ValueError(f'Malformatted date {client_date_orig!r}.')
+
+            avro_record = {
+                'server_date': server_date,
+                'datestamp': server_date.split(maxsplit=1)[0],
+                'versionstring': versionstring,
+                'token': token,
+                'ip': ip,
+                'log_format': log_format,
+                'client_date_orig': client_date_orig,
+                'client_date': client_date_orig.split(maxsplit=1)[0],
+                'client_local_date': client_date_orig[:-6],
+                'tz_offset': tz_offset,
+                'project_id': project_id,
+                'version': version,
+                'uuid': uuid,
+                'event_name': event_name
+            }
+
+            for field, value in fields.items():
+                if value:
+                    if field == '238':
+                        if not isinstance(value, int):
+                            typecasting['field_238_to_int'] += 1
+                            value = int(value)
+                    elif field == '256':
+                        if not isinstance(value, int):
+                            typecasting['field_256_to_int'] += 1
+                            value = int(value)
+                else:
+                    if field == '256':
+                        if not isinstance(value, int):
+                            typecasting['field_256_to_null'] += 1
+                            value = None
+                if field == '255':
+                    if str(value) in ('-2', '-1', '0'):
+                        typecasting['field_255_to_null'] += 1
+                        value = None
+                    elif not isinstance(value, str):
+                        typecasting['field_255_to_str'] += 1
+                        value = str(value)
+
+                avro_record[f"c_{str(field).replace('.', '_')}"] = value
+
+            if random.random() * 100.0 <= validate_percentage:
+                records_validated += 1
+                validate(avro_record, avro_schema)
+
+            records.append(avro_record)
+
+            if len(records) >= avro_batch_size:
+                _write_avro_output()
+
+        except ValueError as parse_error:
+            decode_errors += 1
+            print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
+                  f'{parse_error.__class__.__name__}, line {lines_in} in '
+                  f'{log_path!r}: {parse_error} / Content: {log_line!r}')
+
+        except ValidationError as validation_err:
+            validation_errors += 1
+            print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
+                  f'{validation_err.__class__.__name__}, line {lines_in} in '
+                  f'{log_path!r}: {validation_err} / Content: {log_line!r}')
+
+    _write_avro_output()
+
+    duration_sec = int(time.time() - t0)
+
+    print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
+          f'Converted {lines_in} lines to Avro records '
+          f'in {duration_sec} seconds, '
+          f'dropping {lines_ignored} empty lines, '
+          f'failing to decode {decode_errors} lines, '
+          f'invalidating {validation_errors} records '
+          f'(in {records_validated} validations), '
+          f'with casting summary {typecasting!r}'
+          f'(PID {os.getpid()}).')
+
+    return {
+        'output_path': os.path.abspath(output_path),
+        'metrics': {
+            'lines_in': lines_in,
+            'lines_ignored': lines_ignored,
+            'decode_errors': decode_errors,
+            'validation_errors': validation_errors,
+            'records_out': sum(batch_sizes),
+            'records_validated': records_validated,
+            'typecasting': typecasting,
+            'duration_sec': duration_sec
+        }
+    }

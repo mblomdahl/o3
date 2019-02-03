@@ -23,5 +23,6 @@ ci-*
 
 *.egg-info/
 logs/
-resources/*.sh
+resources/*
+samples/
 airflow_home/*
