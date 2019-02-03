@@ -102,3 +102,88 @@ def filter_to_percentage(input_path: str, percentage: float,
         }
     }
 
+
+def split_log_by_classifier(log_path: str, classifiers: [str]) -> dict:
+    """Splits log file by classifier string, outputs lines in one file for each.
+    """
+
+    print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
+          f'Splitting log file {log_path!r} '
+          f'by classifiers {classifiers!r} '
+          f'(PID {os.getpid()})...')
+
+    def _get_log_path_for_classifier(classifier_name: str) -> str:
+        if log_path.endswith('.bz2') or log_path.endswith('.gz'):
+            return f'{os.path.splitext(log_path)[0]}_{classifier_name}'
+        else:
+            return f'{log_path}_{classifier_name}'
+
+    def _wipe_existing_output_files(output_paths: [str]) -> None:
+        for output_path in output_paths:
+            if os.path.exists(output_path):
+                os.remove(output_path)
+
+    _wipe_existing_output_files(_get_log_path_for_classifier(classifier_name)
+                                for classifier_name in classifiers)
+
+    match_strs = [(b'"' + classifier_name.encode() + b'",', classifier_name)
+                  for classifier_name in classifiers]
+
+    output_file_handles = {}
+
+    def _append_to_file(classifier_name: str, data: bytes) -> None:
+        output_path = _get_log_path_for_classifier(classifier_name)
+        if output_path not in output_file_handles:
+            output_file_handles[output_path] = open(output_path, 'wb')
+
+        output_file_handles[output_path].write(data)
+
+    lines_in, lines_dropped, lines_out = 0, 0, 0
+
+    with open_log_file(log_path) as log_file:
+        for line in log_file:
+            lines_in += 1
+            try:
+                raw_server_date, version, guid, remote_ip, raw_json_data = \
+                    line.split(b'\t', maxsplit=5)
+                if raw_json_data == b'{"d":}\n':
+                    lines_dropped += 1
+                    continue
+                else:
+                    raw_json_data = raw_json_data[:150]
+
+                for match_str, classifier_name in match_strs:
+                    if match_str in raw_json_data:
+                        lines_out += 1
+                        _append_to_file(classifier_name, line)
+                        break
+                else:
+                    raise AssertionError(f'Nothing matches filter string')
+
+            except (ValueError, AssertionError) as parse_err:
+                print(f'{parse_err.__class__.__name__}, line {lines_in} in '
+                      f'{log_path!r}: {parse_err} / Content: {line!r}')
+
+    for handle in output_file_handles.values():
+        handle.close()
+
+    print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
+          f'Read {lines_in}, dropped {lines_dropped}, '
+          f'and wrote {lines_out} lines '
+          f'to output paths {output_file_handles.keys()!r} '
+          f'(PID {os.getpid()}).')
+
+    output_path_by_classifier = {
+        cl_name: os.path.abspath(_get_log_path_for_classifier(cl_name))
+        for cl_name in classifiers
+        if _get_log_path_for_classifier(cl_name) in output_file_handles
+    }
+
+    return {
+        'output_path_by_classifier': output_path_by_classifier,
+        'metrics': {
+            'lines_in': lines_in,
+            'lines_dropped': lines_dropped,
+            'lines_out': lines_out
+        }
+    }
