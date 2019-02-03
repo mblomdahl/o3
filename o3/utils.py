@@ -243,8 +243,7 @@ def convert_to_avro(schema_path: str, log_path: str,
         'field_238_to_int': 0,
         'field_256_to_int': 0,
         'field_256_to_null': 0,
-        'field_255_to_str': 0,
-        'field_255_to_null': 0
+        'field_255_to_str': 0
     }
 
     for log_line in log_file:
@@ -303,10 +302,7 @@ def convert_to_avro(schema_path: str, log_path: str,
                             typecasting['field_256_to_null'] += 1
                             value = None
                 if field == '255':
-                    if str(value) in ('-2', '-1', '0'):
-                        typecasting['field_255_to_null'] += 1
-                        value = None
-                    elif not isinstance(value, str):
+                    if not isinstance(value, str):
                         typecasting['field_255_to_str'] += 1
                         value = str(value)
 
