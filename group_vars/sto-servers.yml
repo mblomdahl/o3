@@ -4,10 +4,11 @@ etc_hosts_routing: |
   10.101.1.71     o3-master
 
 external_dmz:
-  - 37.123.179.154/32
+  - 37.123.179.154/32 # HQ
+  - 213.89.24.38/32   # Carl's Home
   - 10.101.66.0/24
-  - 82.96.2.2/32
-  - 82.96.2.60/32
+  - 82.96.2.2/32      # SMSI Stockholm Office
+  - 82.96.2.60/32     # SMSI Stockholm Office QA
   - 10.110.132.0/24
 
 airflow_admins:
