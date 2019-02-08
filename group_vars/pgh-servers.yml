@@ -12,8 +12,14 @@ external_dmz:
 
 airflow_admins:
   - mblomdahl
+  - cbackstrom
 
 hadoop_admins:
   - mblomdahl
+  - cbackstrom
+
+jupyter_admins:
+  - mblomdahl
+  - cbackstrom
 
 ...
