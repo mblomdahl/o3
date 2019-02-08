@@ -5,10 +5,12 @@ import json
 import datetime
 import click
 
+import hdfs3
+from pyhive import hive
 from fastavro.read import reader, is_avro
 
 from o3.constants import LOG_CLASSIFIERS
-from o3.utils import split_log_by_classifier, filter_to_percentage,\
+from o3.utils import split_log_by_classifier, filter_to_percentage, \
     convert_to_avro
 
 
@@ -171,6 +173,102 @@ def compare_avro(avro_path_a: str, avro_path_b: str, offset: int, limit: int):
             json_file.write(json.dumps({
                 'mismatched_b': sorted(mismatched_b, key=_sort_fn)
             }).encode())
+
+
+@aac.command('ingest_avro')
+@click.argument('schema_path', type=click.Path(exists=True, dir_okay=False))
+@click.argument('avro_path', type=click.Path(exists=True, dir_okay=False))
+@click.option('-t', '--target_table', type=str, help='Target table',
+              default='logevents_ds')
+@click.option('-h', '--host', type=str, help='Hostname', default='o3-master')
+@click.option('--thrift_port', type=int, help='Thrift port', default=10000)
+@click.option('--hdfs_port', type=int, help='HDFS port', default=9000)
+@click.option('-u', '--username', type=str, help='Username', default='airflow')
+def ingest_avro(schema_path: str, avro_path: str, target_table: str, host: str,
+                thrift_port: int, hdfs_port: int, username: str):
+    """Ingest Avro data into Hive."""
+
+    fs = hdfs3.HDFileSystem(host=host, port=hdfs_port, user=username)
+
+    schema_basename = os.path.basename(schema_path)
+    hdfs_schema_path = os.path.join(f'/user/{username}', schema_basename)
+    full_hdfs_schema_path = f'hdfs://{host}:{hdfs_port}{hdfs_schema_path}'
+    if fs.exists(hdfs_schema_path):
+        fs.rm(hdfs_schema_path)
+    fs.put(schema_path, hdfs_schema_path, replication=1)
+
+    avro_basename = os.path.basename(avro_path)
+    hdfs_avro_path = os.path.join(f'/user/{username}', avro_basename)
+
+    if not fs.exists(hdfs_avro_path):
+        fs.put(avro_path, hdfs_avro_path, replication=1)
+
+    conn = hive.Connection(host=host, port=thrift_port, username=username,
+                           configuration={
+                               'hive.exec.dynamic.partition.mode': 'nonstrict'
+                           })
+    cursor = conn.cursor()
+
+    input_fmt = 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat'
+    output_fmt = 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat'
+    row_format = 'org.apache.hadoop.hive.serde2.avro.AvroSerDe'
+    temp_table_name = avro_basename.replace('.', '_').replace('-', '_')
+
+    create_temp_table_stmt = f"""
+        CREATE TABLE IF NOT EXISTS {temp_table_name}
+        ROW FORMAT SERDE '{row_format}'
+        STORED AS INPUTFORMAT '{input_fmt}'
+        OUTPUTFORMAT '{output_fmt}'
+        TBLPROPERTIES ('avro.schema.url'='{full_hdfs_schema_path}')
+    """
+    print(f'--- create_temp_table_stmt ---\n{create_temp_table_stmt}')
+    print(cursor.execute(create_temp_table_stmt))
+
+    select_temp_row_stmt = f"""
+        SELECT * FROM {temp_table_name} LIMIT 1
+    """
+    print(f'--- select_temp_row_stmt---\n{select_temp_row_stmt}')
+    print(cursor.execute(select_temp_row_stmt))
+
+    if cursor.fetchone() is None:
+        load_data_stmt = f"""
+            LOAD DATA INPATH '{hdfs_avro_path}'
+            INTO TABLE {temp_table_name}
+        """
+        print(f'--- load_data_stmt ---\n{load_data_stmt}')
+        print(cursor.execute(load_data_stmt))
+
+    create_target_table_stmt = f"""
+        CREATE EXTERNAL TABLE IF NOT EXISTS {target_table}
+        PARTITIONED BY (ds STRING, h STRING, en STRING)
+        ROW FORMAT SERDE '{row_format}'
+        STORED AS INPUTFORMAT '{input_fmt}'
+        OUTPUTFORMAT '{output_fmt}'
+        TBLPROPERTIES ('avro.schema.url'='{full_hdfs_schema_path}')
+    """
+    print(f'--- create_target_table_stmt ---\n{create_target_table_stmt}')
+    print(cursor.execute(create_target_table_stmt))
+
+    insert_data_stmt = f"""
+        INSERT INTO {target_table} PARTITION (ds, h, en)
+        SELECT
+            *,
+            datestamp AS ds,
+            substr(server_date, 12, 2) AS h,
+            event_name AS en
+        FROM
+            {temp_table_name}
+    """
+
+    print(f'--- insert_data_stmt ---\n{insert_data_stmt}')
+    print(cursor.execute(insert_data_stmt))
+
+    drop_temp_table_stmt = f"""
+        DROP TABLE {temp_table_name}
+    """
+
+    print(f'--- drop_temp_table_stmt ---\n{drop_temp_table_stmt}')
+    print(cursor.execute(drop_temp_table_stmt))
 
 
 if __name__ == '__main__':
