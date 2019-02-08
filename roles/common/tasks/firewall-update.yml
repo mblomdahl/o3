@@ -4,6 +4,16 @@
   set_fact:
     host_subnet_cidr: "{{ (ansible_default_ipv4.network + '/' + ansible_default_ipv4.netmask) | ipaddr('net') }}"
 
+- name: install firewalld
+  package:
+    name: firewalld
+
+- name: firewalld is started and availible on restart
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
 - name: allow all traffic from subnet {{ host_subnet_cidr }}
   firewalld:
     rich_rule: 'rule family=ipv4 source address={{ host_subnet_cidr }} accept'
