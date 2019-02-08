@@ -52,6 +52,9 @@
     dest: /usr/local/apache-hive-2.3.4-bin/conf/hive-site.xml
     owner: hadoop
     group: hadoop
+  notify:
+    - restart hive-metastore
+    - restart hiveserver2
   tags: hive
 
 - name: configure hive-log4j2.properties
@@ -60,6 +63,9 @@
     dest: /usr/local/apache-hive-2.3.4-bin/conf/hive-log4j2.properties
     owner: hadoop
     group: hadoop
+  notify:
+    - restart hive-metastore
+    - restart hiveserver2
   tags: hive
 
 - name: start mariadb database
@@ -94,11 +100,30 @@
   when: (hive_mariadb_tables.stdout_lines | length) == 0
   tags: hive
 
+- name: assert dfs /user/hadoop/warehouse dir exists
+  shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -ls /user/hadoop/warehouse
+  become: yes
+  become_user: hadoop
+  register: assert_user_hadoop_warehouse_dir_exists
+  changed_when: no
+  ignore_errors: yes
+  tags: hive
+
+- name: create dfs /user/hadoop/warehouse dir
+  shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -mkdir /user/hadoop/warehouse
+         && /usr/local/hadoop-2.9.2/bin/hdfs dfs -chmod 1777 /user/hadoop/warehouse
+  become: yes
+  become_user: hadoop
+  when: assert_user_hadoop_warehouse_dir_exists is failed
+  tags: hive
+
 - name: add hive-metastore systemd service
   copy:
     src: hive-metastore.service
     dest: /etc/systemd/system/hive-metastore.service
   register: add_hive_metastore_service
+  notify:
+    - restart hive-metastore
   tags: hive
 
 - name: run daemon-reload on hive-metastore service
@@ -117,6 +142,8 @@
     src: hiveserver2.service
     dest: /etc/systemd/system/hiveserver2.service
   register: add_hiveserver2_service
+  notify:
+    - restart hiveserver2
   tags: hive
 
 - name: run daemon-reload on hiveserver2 service

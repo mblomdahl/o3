@@ -43,4 +43,9 @@
         <name>hive.server2.enable.doAs</name>
         <value>true</value>
     </property>
+
+    <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>/user/hadoop/warehouse</value>
+    </property>
 </configuration>
