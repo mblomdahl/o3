@@ -62,7 +62,8 @@ with DAG('o3_d_dag1', default_args=default_args,
                           glob_pattern='*.txt',
                           src_dir=FILE_INPUT_DIR,
                           dest_dir=PROCESSING_DIR,
-                          fs_type='local',
+                          src_fs_type='local',
+                          dest_fs_type='local',
                           max_files=1,
                           depends_on_past=True)
 

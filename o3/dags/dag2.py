@@ -69,7 +69,8 @@ with DAG('o3_d_dag2', default_args=default_args, schedule_interval='@once',
                           glob_pattern='*.txt',
                           src_dir=FILE_INPUT_DIR,
                           dest_dir=PROCESSING_DIR,
-                          fs_type='hdfs',
+                          src_fs_type='hdfs',
+                          dest_fs_type='hdfs',
                           max_files=1,
                           depends_on_past=True)
 
