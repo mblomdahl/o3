@@ -77,7 +77,7 @@
   file:
     path: /home/jupyter/{{ item }}
     state: touch
-    mode: 0664
+    mode: u=rw,g=rw,o=r
   become: yes
   become_user: jupyter
   with_items:
