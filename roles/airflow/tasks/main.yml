@@ -75,6 +75,12 @@
     - environment-linux.yml
   tags: airflow
 
+- name: ensure bzip2 is installed (required by anaconda on AWS CentOS)
+  package:
+    name: bzip2
+    state: present
+  tags: airflow
+
 - name: ensure anacoda3 installer is present on target system
   copy:
     src: resources/Anaconda3-2018.12-Linux-x86_64.sh

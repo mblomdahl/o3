@@ -44,6 +44,12 @@
   become_user: jupyter
   tags: jupyter
 
+- name: ensure bzip2 is installed (required by anaconda installer on AWS CentOS)
+  package:
+    name: bzip2
+    state: present
+  tags: jupyter
+
 - name: ensure anacoda3 installer is present on target system
   copy:
     src: resources/Anaconda3-2018.12-Linux-x86_64.sh
@@ -131,15 +137,6 @@
   become_user: jupyter
   tags: jupyter
 
-- name: ensure jupyter services matches template
-  template:
-    src: jupyter.service.j2
-    dest: /etc/systemd/system/jupyter.service
-  register: add_jupyter_services
-  notify:
-    - restart jupyter
-  tags: jupyter
-
 - name: ensure jupyter config matches template
   template:
     src: jupyter_notebook_config.py.j2
@@ -149,6 +146,16 @@
   notify:
     - restart jupyter
   tags: jupyter
+
+- name: ensure jupyter service matches template
+  template:
+    src: jupyter.service.j2
+    dest: /etc/systemd/system/jupyter.service
+  register: add_jupyter_services
+  notify:
+    - restart jupyter
+  tags: jupyter
+
 
 - name: ensure jupyter service is running and auto-starting
   systemd:
