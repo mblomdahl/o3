@@ -222,13 +222,13 @@ def ingest_avro(schema_path: str, avro_path: str, target_table: str, host: str,
         TBLPROPERTIES ('avro.schema.url'='{full_hdfs_schema_path}')
     """
     print(f'--- create_temp_table_stmt ---\n{create_temp_table_stmt}')
-    print(cursor.execute(create_temp_table_stmt))
+    cursor.execute(create_temp_table_stmt)
 
     select_temp_row_stmt = f"""
         SELECT * FROM {temp_table_name} LIMIT 1
     """
     print(f'--- select_temp_row_stmt---\n{select_temp_row_stmt}')
-    print(cursor.execute(select_temp_row_stmt))
+    cursor.execute(select_temp_row_stmt)
 
     if cursor.fetchone() is None:
         load_data_stmt = f"""
@@ -236,7 +236,7 @@ def ingest_avro(schema_path: str, avro_path: str, target_table: str, host: str,
             INTO TABLE {temp_table_name}
         """
         print(f'--- load_data_stmt ---\n{load_data_stmt}')
-        print(cursor.execute(load_data_stmt))
+        cursor.execute(load_data_stmt)
 
     create_target_table_stmt = f"""
         CREATE EXTERNAL TABLE IF NOT EXISTS {target_table}
@@ -247,7 +247,7 @@ def ingest_avro(schema_path: str, avro_path: str, target_table: str, host: str,
         TBLPROPERTIES ('avro.schema.url'='{full_hdfs_schema_path}')
     """
     print(f'--- create_target_table_stmt ---\n{create_target_table_stmt}')
-    print(cursor.execute(create_target_table_stmt))
+    cursor.execute(create_target_table_stmt)
 
     insert_data_stmt = f"""
         INSERT INTO {target_table} PARTITION (ds, h, en)
@@ -261,14 +261,14 @@ def ingest_avro(schema_path: str, avro_path: str, target_table: str, host: str,
     """
 
     print(f'--- insert_data_stmt ---\n{insert_data_stmt}')
-    print(cursor.execute(insert_data_stmt))
+    cursor.execute(insert_data_stmt)
 
     drop_temp_table_stmt = f"""
         DROP TABLE {temp_table_name}
     """
 
     print(f'--- drop_temp_table_stmt ---\n{drop_temp_table_stmt}')
-    print(cursor.execute(drop_temp_table_stmt))
+    cursor.execute(drop_temp_table_stmt)
 
 
 if __name__ == '__main__':

@@ -64,10 +64,12 @@ class MoveFileOperator(BaseOperator):
                     break
 
         elif self.src_fs_type == 'local' and self.dest_fs_type == 'hdfs':
+            hdfs = HDFSHook().get_conn()
             for src_path in glob.glob(src_dir_glob):
                 dest_path = _get_dest_path(src_path)
-                self.log.info(f'Moving local file {src_path} to {dest_path}.')
-                shutil.move(src_path, dest_path)
+                self.log.info(f'Moving local {src_path} to HDFS {dest_path}.')
+                hdfs.put(src_path, dest_path)
+                os.remove(src_path)
                 dest_paths.append(dest_path)
                 if self.max_files and len(dest_paths) >= self.max_files:
                     break
