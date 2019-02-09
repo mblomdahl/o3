@@ -24,7 +24,7 @@
   become_user: jupyter
   tags: jupyter
 
-- name: ensure ~/notebooks ~/.jupyter dir exists
+- name: ensure ~/o3 and ~/notebooks ~/.jupyter dir exists
   file:
     path: '/home/jupyter/{{ item }}'
     state: directory
@@ -32,13 +32,14 @@
   become_user: jupyter
   with_items:
     - notebooks
+    - o3
     - .jupyter
   tags: jupyter
 
-- name: ensure environment-linux.yml is present on the remote system
+- name: ensure latest code base is copied to remote server
   copy:
     src: environment-linux.yml
-    dest: /home/jupyter/environment-linux.yml
+    dest: /home/jupyter/o3/environment-linux.yml
   become: yes
   become_user: jupyter
   tags: jupyter
@@ -129,7 +130,7 @@
   tags: jupyter
 
 - name: ensure conda environment is created based on environment-linux.yml
-  shell: bash -il -c 'conda env create --name o3 python=3.6 -f /home/jupyter/environment-linux.yml'
+  shell: bash -il -c 'conda env create --name o3 python=3.6 -f /home/jupyter/o3/environment-linux.yml'
   args:
     creates: /home/jupyter/anaconda3/envs/o3
   become: yes
