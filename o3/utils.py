@@ -43,9 +43,9 @@ def filter_to_percentage(input_path: str, percentage: float,
 
     def _drop_line(id_bytes: bytes) -> bool:
         if percentage <= 0.0:
-            return False
-        elif percentage >= 100.0:
             return True
+        elif percentage >= 100.0:
+            return False
         else:
             if int(hashlib.md5(id_bytes).hexdigest(), 16) <= _DROP_THRESHOLD:
                 return False
