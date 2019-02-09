@@ -36,10 +36,19 @@
     - .jupyter
   tags: jupyter
 
-- name: ensure latest code base is copied to remote server
+- name: ensure latest environment is present on the server
   copy:
     src: environment-linux.yml
     dest: /home/jupyter/o3/environment-linux.yml
+  become: yes
+  become_user: jupyter
+  tags: jupyter
+
+- name: ensure new notebooks are copied to the server
+  copy:
+    src: o3/notebooks
+    dest: /home/jupyter/o3/
+    force: false
   become: yes
   become_user: jupyter
   tags: jupyter
@@ -77,19 +86,6 @@
     - .conda
     - .conda/pkgs
   register: dot_conda_dirs
-  tags: jupyter
-
-- name: ensure environment files to mitigate conda bugs exists
-  file:
-    path: /home/jupyter/{{ item }}
-    state: touch
-    mode: u=rw,g=rw,o=r
-  become: yes
-  become_user: jupyter
-  with_items:
-    - .conda/environments.txt
-    - anaconda3/envs/.conda_envs_dir_test
-  when: dot_conda_dirs is changed
   tags: jupyter
 
 - name: ensure environment files to mitigate conda bugs exists
