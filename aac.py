@@ -45,15 +45,17 @@ def split_logs(log_path: str):
               default=None, help='Avro file output path')
 @click.option('-p', '--validate_percentage', type=float,
               help='Percentage to validate', default=100.0)
+@click.option('-o', '--offset', type=int, help='Start line offset', default=0)
 @click.option('-l', '--limit', type=int, help='Max lines to convert')
 def to_avro(schema_path: str, log_path: str, output_path: str,
-            validate_percentage: float, limit: int):
+            validate_percentage: float, offset: int, limit: int):
     """Convert log input to Avro format."""
 
     click.echo(convert_to_avro(schema_path, log_path,
                                output_path=output_path,
                                delete_existing_avro_file=True,
                                validate_percentage=validate_percentage,
+                               offset=offset,
                                max_lines=limit))
 
 

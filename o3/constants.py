@@ -17,7 +17,7 @@ DEFAULT_ARGS = {
     'email': ['mats.blomdahl@gmail.com'],
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 3,
+    'retries': 0,
     'retry_delay': timedelta(seconds=5),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',

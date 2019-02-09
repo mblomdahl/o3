@@ -40,11 +40,11 @@ FILE_INPUT_DIR = path.join('/user/airflow/', 'input')
 PROCESSING_DIR = path.join('/user/airflow/', 'processing')
 
 
-def _get_t1_filepaths(**ctx):
+def _get_input_filepath(**ctx):
     return ctx['ti'].xcom_pull(task_ids='o3_t_get_input_file')
 
 
-def _o3_t_summarize(**ctx):
+def _summarize_counts(**ctx):
     words, rows = ctx['task_instance'].xcom_pull(
         task_ids=['o3_t_count_words', 'o3_t_count_rows'])
     return f'summary: {words} / {rows}'
@@ -71,19 +71,19 @@ with DAG('o3_d_dag2', default_args=DEFAULT_ARGS, schedule_interval='@once',
                                        depends_on_past=True)
 
     count_words = WordCountOperator(task_id='o3_t_count_words',
-                                    filepath=_get_t1_filepaths,
+                                    filepath=_get_input_filepath,
                                     fs_type='hdfs')
 
     count_rows = RowCountOperator(task_id='o3_t_count_rows',
-                                  filepath=_get_t1_filepaths,
+                                  filepath=_get_input_filepath,
                                   fs_type='hdfs')
 
     summarize_counts = PythonOperator(task_id='o3_t_summarize',
-                                      python_callable=_o3_t_summarize,
+                                      python_callable=_summarize_counts,
                                       provide_context=True)
 
     remove_input_file = RemoveFileOperator(task_id='o3_t_remove_input',
-                                           filepath=_get_t1_filepaths,
+                                           filepath=_get_input_filepath,
                                            fs_type='hdfs')
 
     # Workflow!
