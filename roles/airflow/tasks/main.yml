@@ -70,8 +70,28 @@
   become: yes
   become_user: airflow
   with_items:
+    - aac.py
     - setup.py
-    - o3/
+    - o3/__init__.py
+    - o3/constants.py
+    - o3/utils.py
+    - o3/dags/__init__.py
+    - o3/dags/dag1.py
+    - o3/dags/dag2.py
+    - o3/dags/dag3.py
+    - o3/hooks/__init__.py
+    - o3/hooks/hdfs_hook.py
+    - o3/hooks/pyhive_hook.py
+    - o3/operators/__init__.py
+    - o3/operators/convert_log_to_avro_operator.py
+    - o3/operators/ensure_dir_operator.py
+    - o3/operators/filter_logs_to_percentage_operator.py
+    - o3/operators/ingest_avro_into_hive_operator.py
+    - o3/operators/move_file_operator.py
+    - o3/operators/remove_file_operator.py
+    - o3/operators/row_count_operator.py
+    - o3/operators/split_log_by_classifiers_operator.py
+    - o3/operators/word_count_operator.py
     - environment-linux.yml
   tags: airflow
 
