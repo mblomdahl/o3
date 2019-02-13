@@ -9,6 +9,17 @@ setup(
     license='The Unlicense',
     description='Hadoop-Airflow analytics',
     # https://pypi.python.org/pypi?:action=list_classifiers
+    install_requires=[
+        'psycopg2',
+        'hdfs3',
+        'apache-airflow',
+        'ansible',
+        'netaddr',
+        'ipython',
+        'pandas',
+        'fastavro',
+        'pyhive'
+    ],
     classifiers=[
         'Environment :: Console',
         'Intended Audience :: Developers',
