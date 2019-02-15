@@ -131,6 +131,16 @@
     creates: /home/jupyter/anaconda3/envs/o3
   become: yes
   become_user: jupyter
+  register: conda_environment_created
+  tags: jupyter
+
+- name: ensure conda environment is updated based on environment-linux.yml
+  shell: bash -il -c 'conda env update --name jupyter -f /home/jupyter/environment-linux.yml'
+  become: yes
+  become_user: jupyter
+  notify:
+    - restart jupyter
+  when: conda_environment_created is not changed
   tags: jupyter
 
 - name: ensure jupyter config matches template
