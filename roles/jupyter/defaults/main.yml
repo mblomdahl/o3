@@ -1,0 +1,7 @@
+---
+
+jupyter_admins: []
+
+# The password is set to to jupyter to avoid questions about token.
+# See https://jupyter-notebook.readthedocs.io/en/stable/public_server.html
+jupyter_web_password: 'sha1:8714f0b53116:3c67ceb5c8153fa4c11ef8763329689461712336'

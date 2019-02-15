@@ -21,6 +21,14 @@
         state: enabled
       with_items: "{{ external_dmz }}"
 
+    - name: allow traffic to jupyter port 8888 from external dmz
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8888 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ external_dmz }}"
+
     - name: allow traffic to hdfs namenode port 9000 from external dmz
       firewalld:
         rich_rule: 'rule family=ipv4 source address={{ item }} port port=9000 protocol=tcp accept'
