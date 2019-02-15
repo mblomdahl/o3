@@ -1,4 +1,5 @@
 ---
+
 - name: ensure jupyter user exists
   user:
     name: jupyter
@@ -26,23 +27,31 @@
   become_user: jupyter
   tags: jupyter
 
-- name: ensure ~/o3 and ~/o3/notebooks ~/.jupyter dir exists
+- name: ensure ~/o3 and ~/notebooks ~/.jupyter dir exists
   file:
-    path: '/home/jupyter/{{ item }}'
+    path: /home/jupyter/{{ item }}
     state: directory
   become: yes
   become_user: jupyter
   with_items:
     - o3
-    - o3/notebooks
+    - notebooks
     - .jupyter
   tags: jupyter
 
-# TODO(mblomdahl): Change deployment path to ~/notebooks dir
+- name: ensure notebooks dir in o3 python package does not exist
+  file:
+    path: /home/jupyter/o3/{{ item }}
+    state: absent
+  with_items:
+    - notebooks
+    - o3/notebooks
+  tags: jupyter
+
 - name: ensure sample notebook is copied to the server
   copy:
-    src: o3/notebooks/gdp_per_country.ipynb
-    dest: /home/jupyter/o3/notebooks/gdp_per_country.ipynb
+    src: notebooks/gdp_per_country.ipynb
+    dest: /home/jupyter/notebooks/gdp_per_country.ipynb
   become: yes
   become_user: jupyter
   tags: jupyter
