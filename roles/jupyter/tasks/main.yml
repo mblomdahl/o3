@@ -38,11 +38,11 @@
     - .jupyter
   tags: jupyter
 
-- name: ensure new notebooks are copied to the server
+# TODO(mblomdahl): Change deployment path to ~/notebooks dir
+- name: ensure sample notebook is copied to the server
   copy:
-    src: o3/notebooks
-    dest: /home/jupyter/o3/
-    force: false
+    src: o3/notebooks/gdp_per_country.ipynb
+    dest: /home/jupyter/o3/notebooks/gdp_per_country.ipynb
   become: yes
   become_user: jupyter
   tags: jupyter
