@@ -7,14 +7,16 @@
   tags: jupyter
 
 - name: ensure jupyter user has authorized_keys set
-  authorized_key: user=jupyter key="{{ lookup('file', 'public_keys/' + item + '_id_rsa.pub') }}"
+  authorized_key:
+    user: jupyter
+    key: "{{ lookup('file', 'public_keys/' + item + '_id_rsa.pub') }}"
   with_items: "{{ ['hadoop'] + jupyter_admins }}"
   tags: jupyter
 
 - name: ensure better bash history for jupyter user
   blockinfile:
     dest: /home/jupyter/.bashrc
-    mode: u=rw,g=rw,o=r
+    mode: u=rw,g=r,o=r
     marker: "# {mark} ANSIBLE MANAGED BLOCK jupyter-history"
     block: |
       HISTFILESIZE=20000
@@ -36,14 +38,6 @@
     - .jupyter
   tags: jupyter
 
-- name: ensure latest environment is present on the server
-  copy:
-    src: environment-linux.yml
-    dest: /home/jupyter/o3/environment-linux.yml
-  become: yes
-  become_user: jupyter
-  tags: jupyter
-
 - name: ensure new notebooks are copied to the server
   copy:
     src: o3/notebooks
@@ -53,94 +47,20 @@
   become_user: jupyter
   tags: jupyter
 
-- name: ensure bzip2 is installed (required by anaconda installer on AWS CentOS)
-  package:
-    name: bzip2
-    state: present
-  tags: jupyter
-
-- name: ensure anacoda3 installer is present on target system
+- name: ensure latest environment is present on the server
   copy:
-    src: resources/Anaconda3-2018.12-Linux-x86_64.sh
-    dest: /tmp/Anaconda3-2018.12-Linux-x86_64.sh
-    mode: u=rwx,g=rwx,o=rx
-    owner: root
-  tags: jupyter
-
-- name: ensure anacoda3 is installed
-  shell: /tmp/Anaconda3-2018.12-Linux-x86_64.sh -b
-  args:
-    creates: /home/jupyter/anaconda3
-  become: yes
-  become_user: jupyter
-  register: anaconda3_installed
-  tags: jupyter
-
-- name: ensure ~/.conda/pkgs dir is present
-  file:
-    path: /home/jupyter/{{ item }}
-    state: directory
-  become: yes
-  become_user: jupyter
-  with_items:
-    - .conda
-    - .conda/pkgs
-  register: dot_conda_dirs
-  tags: jupyter
-
-- name: ensure environment files to mitigate conda bugs exists
-  file:
-    path: /home/jupyter/{{ item }}
-    state: touch
-    mode: u=rw,g=rw,o=r
-  become: yes
-  become_user: jupyter
-  with_items:
-    - .conda/environments.txt
-    - anaconda3/envs/.conda_envs_dir_test
-  when: dot_conda_dirs is changed
-  tags: jupyter
-
-- name: ensure conda is up-to-date
-  shell: /home/jupyter/anaconda3/bin/conda update -y conda
-  become: yes
-  become_user: jupyter
-  when: anaconda3_installed is changed
-  tags: jupyter
-
-- name: ensure conda initializes bash
-  shell: /home/jupyter/anaconda3/bin/conda init bash
-  become: yes
-  become_user: jupyter
-  when: anaconda3_installed is changed
-  tags: jupyter
-
-- name: ensure conda base env is deactivated in {{ bash_profile_file }}
-  blockinfile:
-    path: /home/jupyter/{{ bash_profile_file }}
-    marker: "# {mark} ANSIBLE MANAGED BLOCK jupyter-conda"
-    block: |
-      conda deactivate
+    src: environment-linux.yml
+    dest: /home/jupyter/o3/environment-linux.yml
   become: yes
   become_user: jupyter
   tags: jupyter
 
-- name: ensure conda environment is created based on environment-linux.yml
-  shell: bash -il -c 'conda env create --name o3 python=3.6 -f /home/jupyter/o3/environment-linux.yml'
-  args:
-    creates: /home/jupyter/anaconda3/envs/o3
-  become: yes
-  become_user: jupyter
-  register: conda_environment_created
-  tags: jupyter
-
-- name: ensure conda environment is updated based on environment-linux.yml
-  shell: bash -il -c 'conda env update --name o3 -f /home/jupyter/o3/environment-linux.yml'
-  become: yes
-  become_user: jupyter
-  notify:
-    - restart jupyter
-  when: conda_environment_created is not changed
+- name: ensure anaconda3 environment is set up
+  include_role:
+    name: anaconda3
+  vars:
+    anaconda3_user: jupyter
+    anaconda3_environment_file: /home/jupyter/o3/environment-linux.yml
   tags: jupyter
 
 - name: ensure jupyter config matches template
@@ -162,7 +82,6 @@
     - restart jupyter
   tags: jupyter
 
-
 - name: ensure jupyter service is running and auto-starting
   systemd:
     name: jupyter
@@ -170,3 +89,5 @@
     enabled: true
     daemon_reload: '{{ true if add_jupyter_services is changed else false }}'
   tags: jupyter
+
+...

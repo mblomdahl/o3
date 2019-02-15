@@ -95,96 +95,12 @@
     - environment-linux.yml
   tags: airflow
 
-- name: ensure bzip2 is installed (required by anaconda on AWS CentOS)
-  package:
-    name: bzip2
-    state: present
-  tags: airflow
-
-- name: ensure anacoda3 installer is present on target system
-  copy:
-    src: resources/Anaconda3-2018.12-Linux-x86_64.sh
-    dest: /tmp/Anaconda3-2018.12-Linux-x86_64.sh
-    owner: airflow
-    mode: u=rwx,g=rwx,o=rx
-  tags: airflow
-
-- name: ensure anaconda3 shell setup is absent
-  blockinfile:
-    dest: /home/airflow/.bashrc
-    marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-anaconda3"
-    block: |
-      . /home/airflow/anaconda3/etc/profile.d/conda.sh
-    state: absent
-  become: yes
-  become_user: airflow
-  tags: airflow
-
-- name: ensure anacoda3 is installed
-  shell: /tmp/Anaconda3-2018.12-Linux-x86_64.sh -b
-  args:
-    creates: /home/airflow/anaconda3
-  become: yes
-  become_user: airflow
-  register: anaconda3_installed
-  tags: airflow
-
-- name: ensure ~/.conda/pkgs dir is present
-  file:
-    path: /home/airflow/{{ item }}
-    state: directory
-  become: yes
-  become_user: airflow
-  with_items:
-    - .conda
-    - .conda/pkgs
-  register: dot_conda_dirs
-  tags: airflow
-
-- name: ensure environment files to mitigate conda bugs exists
-  file:
-    path: /home/airflow/{{ item }}
-    state: touch
-    mode: 0664
-  become: yes
-  become_user: airflow
-  with_items:
-    - .conda/environments.txt
-    - anaconda3/envs/.conda_envs_dir_test
-  when: dot_conda_dirs is changed
-  tags: airflow
-
-- name: ensure conda is up-to-date
-  shell: /home/airflow/anaconda3/bin/conda update -y conda
-  become: yes
-  become_user: airflow
-  when: anaconda3_installed is changed
-  tags: airflow
-
-- name: ensure conda initializes bash
-  shell: /home/airflow/anaconda3/bin/conda init bash
-  become: yes
-  become_user: airflow
-  when: anaconda3_installed is changed
-  tags: airflow
-
-- name: ensure conda base env is deactivated in {{ bash_profile_file }}
-  blockinfile:
-    path: /home/airflow/{{ bash_profile_file }}
-    marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-conda"
-    block: |
-      conda deactivate
-  become: yes
-  become_user: airflow
-  tags: airflow
-
-- name: ensure conda environment is created based on environment-linux.yml
-  shell: bash -il -c 'source /home/airflow/anaconda3/bin/activate && conda env
-         create --name o3 python=3.6 -f /home/airflow/o3/environment-linux.yml'
-  args:
-    creates: /home/airflow/anaconda3/envs/o3
-  become: yes
-  become_user: airflow
+- name: ensure anaconda3 environment is set up
+  include_role:
+    name: anaconda3
+  vars:
+    anaconda3_user: airflow
+    anaconda3_environment_file: /home/airflow/o3/environment-linux.yml
   tags: airflow
 
 - name: ensure o3 package is installed within the o3 conda environment
