@@ -27,14 +27,13 @@
   become_user: jupyter
   tags: jupyter
 
-- name: ensure ~/o3 and ~/notebooks ~/.jupyter dir exists
+- name: ensure ~/notebooks ~/.jupyter dir exists
   file:
     path: /home/jupyter/{{ item }}
     state: directory
   become: yes
   become_user: jupyter
   with_items:
-    - o3
     - notebooks
     - .jupyter
   tags: jupyter
@@ -45,6 +44,7 @@
     state: absent
   with_items:
     - notebooks
+    - o3
     - o3/notebooks
   tags: jupyter
 
@@ -57,9 +57,9 @@
   tags: jupyter
 
 - name: ensure latest environment is present on the server
-  copy:
-    src: environment-linux.yml
-    dest: /home/jupyter/o3/environment-linux.yml
+  template:
+    src: environment-linux.yml.j2
+    dest: /home/jupyter/environment-linux.yml
   become: yes
   become_user: jupyter
   tags: jupyter
@@ -69,7 +69,7 @@
     name: anaconda3
   vars:
     anaconda3_user: jupyter
-    anaconda3_environment_file: /home/jupyter/o3/environment-linux.yml
+    anaconda3_environment_file: /home/jupyter/environment-linux.yml
   tags: jupyter
 
 - name: ensure jupyter config matches template

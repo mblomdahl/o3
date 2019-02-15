@@ -79,16 +79,16 @@
   tags: anaconda3
 
 - name: ensure conda environment is created based on environment-linux.yml
-  shell: bash -il -c 'conda env create --name o3 python=3.6 -f {{ anaconda3_environment_file }}'
+  shell: bash -il -c 'conda env create --name jupyter python=3.6 -f {{ anaconda3_environment_file }}'
   args:
-    creates: /home/{{ anaconda3_user }}/anaconda3/envs/o3
+    creates: /home/{{ anaconda3_user }}/anaconda3/envs/jupyter
   become: yes
   become_user: "{{ anaconda3_user }}"
   register: conda_environment_created
   tags: anaconda3
 
 - name: ensure conda environment is updated based on environment-linux.yml
-  shell: bash -il -c 'conda env update --name o3 -f {{ anaconda3_environment_file }}'
+  shell: bash -il -c 'conda env update --name jupyter -f {{ anaconda3_environment_file }}'
   become: yes
   become_user: "{{ anaconda3_user }}"
   when: conda_environment_created is not changed
