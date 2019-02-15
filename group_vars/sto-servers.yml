@@ -8,8 +8,7 @@ external_dmz:
   - 213.89.24.38/32   # Carl's Home
   - 10.101.66.0/24
   - 10.101.96.0/24
-  - 82.96.2.2/32      # SMSI Stockholm Office
-  - 82.96.2.60/32     # SMSI Stockholm Office QA
+  - 82.96.2.60/32     # Sto Office QA
   - 10.110.132.0/24
 
 airflow_admins:
