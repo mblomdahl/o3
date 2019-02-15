@@ -15,6 +15,8 @@ airflow_admins:
   - mblomdahl
   - cbackstrom
 
+airflow_port: 8081
+
 hadoop_admins:
   - mblomdahl
   - cbackstrom

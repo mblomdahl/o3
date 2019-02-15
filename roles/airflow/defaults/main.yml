@@ -4,6 +4,8 @@ source_branch: master
 
 airflow_admins: []
 
+airflow_port: 8080
+
 airflow_db_user_password: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   34653038373036663735653932373361616132653264656465666365383362306662336237353434
