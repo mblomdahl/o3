@@ -1,0 +1,14 @@
+[Unit]
+Description=Jupyter daemon
+After=network.target
+
+[Service]
+Type=simple
+User=jupyter
+Group=jupyter
+ExecStart=/bin/bash -ilc 'conda activate o3 && jupyter notebook'
+WorkingDirectory=/home/jupyter/notebooks
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,19 @@
+galaxy_info:
+  author: Carl Bäckström
+  description: Provisioning of Jupyter
+
+  min_ansible_version: 2.7
+
+  platforms:
+    - name: EL
+      versions:
+        - 7
+    - name: Ubuntu
+      versions:
+        - Bionic
+
+  galaxy_tags:
+    - jupyter
+
+dependencies:
+  - python

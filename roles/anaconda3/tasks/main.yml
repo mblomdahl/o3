@@ -1,0 +1,97 @@
+---
+
+- name: ensure and anaconda3_user and anaconda3_environment_file is set
+  fail:
+    msg: "Missing something..."
+  when: not (anaconda3_user and anaconda3_environment_file)
+  tags: anaconda3
+
+- name: ensure bzip2 is installed (required by anaconda installer on AWS CentOS)
+  package:
+    name: bzip2
+    state: present
+  tags: anaconda3
+
+- name: ensure anacoda3 installer is present on target system
+  copy:
+    src: resources/Anaconda3-2018.12-Linux-x86_64.sh
+    dest: /tmp/Anaconda3-2018.12-Linux-x86_64.sh
+    mode: u=rwx,g=rwx,o=rwx
+    owner: root
+  tags: anaconda3
+
+- name: ensure anacoda3 is installed
+  shell: /tmp/Anaconda3-2018.12-Linux-x86_64.sh -b
+  args:
+    creates: /home/{{ anaconda3_user }}/anaconda3
+  become: yes
+  become_user: "{{ anaconda3_user }}"
+  register: anaconda3_installed
+  tags: anaconda3
+
+- name: ensure ~/.conda/pkgs dir is present
+  file:
+    path: /home/{{ anaconda3_user }}/{{ item }}
+    state: directory
+  become: yes
+  become_user: "{{ anaconda3_user }}"
+  with_items:
+    - .conda
+    - .conda/pkgs
+  register: dot_conda_dirs
+  tags: anaconda3
+
+- name: ensure environment files to mitigate conda bugs exists
+  file:
+    path: /home/{{ anaconda3_user }}/{{ item }}
+    state: touch
+    mode: u=rw,g=rw,o=r
+  become: yes
+  become_user: "{{ anaconda3_user }}"
+  with_items:
+    - .conda/environments.txt
+    - anaconda3/envs/.conda_envs_dir_test
+  when: dot_conda_dirs is changed
+  tags: anaconda3
+
+- name: ensure conda is up-to-date
+  shell: /home/{{ anaconda3_user }}/anaconda3/bin/conda update -y conda
+  become: yes
+  become_user: "{{ anaconda3_user }}"
+  when: anaconda3_installed is changed
+  tags: anaconda3
+
+- name: ensure conda initializes bash
+  shell: /home/{{ anaconda3_user }}/anaconda3/bin/conda init bash
+  become: yes
+  become_user: "{{ anaconda3_user }}"
+  when: anaconda3_installed is changed
+  tags: anaconda3
+
+- name: ensure conda base env is deactivated in {{ bash_profile_file }}
+  blockinfile:
+    path: /home/{{ anaconda3_user }}/{{ bash_profile_file }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ anaconda3_user }}-conda"
+    block: |
+      conda deactivate
+  become: yes
+  become_user: "{{ anaconda3_user }}"
+  tags: anaconda3
+
+- name: ensure conda environment is created based on environment-linux.yml
+  shell: bash -il -c 'conda env create --name o3 python=3.6 -f {{ anaconda3_environment_file }}'
+  args:
+    creates: /home/{{ anaconda3_user }}/anaconda3/envs/o3
+  become: yes
+  become_user: "{{ anaconda3_user }}"
+  register: conda_environment_created
+  tags: anaconda3
+
+- name: ensure conda environment is updated based on environment-linux.yml
+  shell: bash -il -c 'conda env update --name o3 -f {{ anaconda3_environment_file }}'
+  become: yes
+  become_user: "{{ anaconda3_user }}"
+  when: conda_environment_created is not changed
+  tags: anaconda3
+
+...

@@ -43,9 +43,9 @@ def filter_to_percentage(input_path: str, percentage: float,
 
     def _drop_line(id_bytes: bytes) -> bool:
         if percentage <= 0.0:
-            return False
-        elif percentage >= 100.0:
             return True
+        elif percentage >= 100.0:
+            return False
         else:
             if int(hashlib.md5(id_bytes).hexdigest(), 16) <= _DROP_THRESHOLD:
                 return False
@@ -194,16 +194,17 @@ def convert_to_avro(schema_path: str, log_path: str,
                     delete_existing_avro_file: bool = True,
                     validate_percentage: float = 100.0,
                     avro_batch_size: int = 2000,
+                    offset: int = 0,
                     max_lines: int = None) -> dict:
     """Converts a log file to Avro format."""
 
     t0 = time.time()
 
     def _get_output_path(input_path: str):
-        if input_path.endswith('.bz2') or log_path.endswith('.gz'):
-            return f'{os.path.splitext(log_path)[0]}.avro'
+        if input_path.endswith('.bz2') or input_path.endswith('.gz'):
+            return f'{os.path.splitext(input_path)[0]}.avro'
         else:
-            return f'{log_path}.avro'
+            return f'{input_path}.avro'
 
     if not output_path:
         output_path = _get_output_path(log_path)
@@ -238,7 +239,8 @@ def convert_to_avro(schema_path: str, log_path: str,
         records.clear()
 
     log_file = open_log_file(log_path)
-    lines_in, lines_ignored, decode_errors, validation_errors = 0, 0, 0, 0
+    lines_in, lines_ignored = 0, 0
+    decode_errors, validation_errors, total_errors = 0, 0, 0
     typecasting = {
         'field_238_to_int': 0,
         'field_256_to_int': 0,
@@ -248,7 +250,9 @@ def convert_to_avro(schema_path: str, log_path: str,
 
     for log_line in log_file:
         lines_in += 1
-        if max_lines and lines_in >= max_lines:
+        if lines_in < offset:
+            continue
+        if max_lines and (lines_in - offset) >= max_lines:
             break
 
         try:
@@ -319,22 +323,29 @@ def convert_to_avro(schema_path: str, log_path: str,
 
         except ValueError as parse_error:
             decode_errors += 1
+            total_errors += 1
             print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
                   f'{parse_error.__class__.__name__}, line {lines_in} in '
                   f'{log_path!r}: {parse_error} / Content: {log_line!r}')
 
         except ValidationError as validation_err:
             validation_errors += 1
+            total_errors += 1
             print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
                   f'{validation_err.__class__.__name__}, line {lines_in} in '
                   f'{log_path!r}: {validation_err} / Content: {log_line!r}')
+
+        finally:
+            if total_errors > 50 and total_errors / (lines_in - offset) > 0.001:
+                raise Exception(f'Excessive error rate '
+                                f'{total_errors / (lines_in - offset)}.')
 
     _write_avro_output()
 
     duration_sec = int(time.time() - t0)
 
     print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
-          f'Converted {lines_in} lines to Avro records '
+          f'Converted {lines_in - offset} lines to Avro records '
           f'in {duration_sec} seconds, '
           f'dropping {lines_ignored} empty lines, '
           f'failing to decode {decode_errors} lines, '

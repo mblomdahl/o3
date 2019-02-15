@@ -19,7 +19,15 @@
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz }}"
+      with_items: "{{ src_addr_whitelist }}"
+
+    - name: allow traffic to jupyter port 8888 from external dmz
+      firewalld:
+        rich_rule: 'rule family=ipv4 source address={{ item }} port port=8888 protocol=tcp accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items: "{{ src_addr_whitelist }}"
 
     - name: allow traffic to hdfs namenode port 9000 from external dmz
       firewalld:
@@ -27,7 +35,7 @@
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz }}"
+      with_items: "{{ src_addr_whitelist }}"
 
     - name: allow traffic to hdfs namenode ui port 50070 from external dmz
       firewalld:
@@ -35,7 +43,7 @@
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz }}"
+      with_items: "{{ src_addr_whitelist }}"
 
     - name: allow traffic to yarn resourcemanager ui port 8088 from external dmz
       firewalld:
@@ -43,7 +51,7 @@
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz }}"
+      with_items: "{{ src_addr_whitelist }}"
 
     - name: allow traffic to yarn resourcemanager port 8032 from external dmz
       firewalld:
@@ -51,7 +59,7 @@
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz }}"
+      with_items: "{{ src_addr_whitelist }}"
 
     - name: allow traffic to yarn resourcemanager tracker port 8031 from external dmz
       firewalld:
@@ -59,7 +67,7 @@
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz }}"
+      with_items: "{{ src_addr_whitelist }}"
 
     - name: allow traffic to yarn resourcemanager scheduler port 8030 from external dmz
       firewalld:
@@ -67,7 +75,7 @@
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz }}"
+      with_items: "{{ src_addr_whitelist }}"
 
     - name: allow traffic to yarn resourcemanager admin port 8033 from external dmz
       firewalld:
@@ -75,7 +83,7 @@
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz }}"
+      with_items: "{{ src_addr_whitelist }}"
 
     - name: allow traffic to yarn job history service ui port 19888 from external dmz
       firewalld:
@@ -83,7 +91,7 @@
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz }}"
+      with_items: "{{ src_addr_whitelist }}"
 
     - name: allow traffic to spark history server ui port 18080 from external dmz
       firewalld:
@@ -91,7 +99,7 @@
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz }}"
+      with_items: "{{ src_addr_whitelist }}"
 
     - name: allow traffic to hive thrift port 10000 from external dmz
       firewalld:
@@ -99,7 +107,7 @@
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz }}"
+      with_items: "{{ src_addr_whitelist }}"
 
     - name: allow traffic to hive web ui port 10002 from external dmz
       firewalld:
@@ -107,7 +115,7 @@
         permanent: yes
         immediate: yes
         state: enabled
-      with_items: "{{ external_dmz }}"
+      with_items: "{{ src_addr_whitelist }}"
 
   when: "'master-nodes' in group_names"
 
@@ -117,7 +125,7 @@
     permanent: yes
     immediate: yes
     state: enabled
-  with_items: "{{ external_dmz }}"
+  with_items: "{{ src_addr_whitelist }}"
 
 - name: allow traffic to hdfs datanode ui port 50075 from external dmz
   firewalld:
@@ -125,7 +133,7 @@
     permanent: yes
     immediate: yes
     state: enabled
-  with_items: "{{ external_dmz }}"
+  with_items: "{{ src_addr_whitelist }}"
 
 - name: allow traffic to yarn nodemanager ui port 8042 from external dmz
   firewalld:
@@ -133,7 +141,7 @@
     permanent: yes
     immediate: yes
     state: enabled
-  with_items: "{{ external_dmz }}"
+  with_items: "{{ src_addr_whitelist }}"
 
 - name: allow traffic to yarn nodemanager port 45454 from external dmz
   firewalld:
@@ -141,7 +149,7 @@
     permanent: yes
     immediate: yes
     state: enabled
-  with_items: "{{ external_dmz }}"
+  with_items: "{{ src_addr_whitelist }}"
 
 - name: allow traffic to spark driver web ui port 4040 from external dmz
   firewalld:
@@ -149,6 +157,6 @@
     permanent: yes
     immediate: yes
     state: enabled
-  with_items: "{{ external_dmz }}"
+  with_items: "{{ src_addr_whitelist }}"
 
 ...

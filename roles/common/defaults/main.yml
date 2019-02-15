@@ -2,7 +2,7 @@
 
 hadoop_admins: []
 
-external_dmz: []
+src_addr_whitelist: []
 
 etc_hosts_routing:
 

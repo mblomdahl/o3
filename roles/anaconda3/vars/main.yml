@@ -1,0 +1,5 @@
+---
+
+bash_profile_file: .{{ 'bash_' if ansible_distribution == 'CentOS' else '' }}profile
+
+...

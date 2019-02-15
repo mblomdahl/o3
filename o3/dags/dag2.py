@@ -21,7 +21,6 @@ What it does:
 """
 
 from os import path
-from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
@@ -33,72 +32,63 @@ from o3.operators.word_count_operator import WordCountOperator
 from o3.operators.row_count_operator import RowCountOperator
 from o3.operators.remove_file_operator import RemoveFileOperator
 
+from o3.constants import DEFAULT_ARGS
 
-default_args = {
-    'owner': 'mblomdahl',
-    'depends_on_past': False,
-    'start_date': datetime(2019, 1, 18),
-    'email': ['mats.blomdahl@gmail.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 3,
-    'retry_delay': timedelta(seconds=5),
-    # 'queue': 'bash_queue',
-    # 'pool': 'backfill',
-    # 'priority_weight': 10,
-    # 'end_date': datetime(2016, 1, 1),
-}
 
 FILE_INPUT_DIR = path.join('/user/airflow/', 'input')
 
 PROCESSING_DIR = path.join('/user/airflow/', 'processing')
 
 
-with DAG('o3_d_dag2', default_args=default_args, schedule_interval='@once',
-         catchup=False) as dag2:
+def _get_input_filepath(**ctx):
+    return ctx['ti'].xcom_pull(task_ids='o3_t_get_input_file')
 
-    t0 = EnsureDirOperator(task_id='o3_t_ensure_dirs_exist',
-                           paths=[FILE_INPUT_DIR, PROCESSING_DIR],
-                           fs_type='hdfs')
 
-    s0 = HDFSSensor(task_id='o3_s_scan_input_dir',
-                    hdfs_conn_id='hdfs_default',
-                    filepath=FILE_INPUT_DIR)
+def _summarize_counts(**ctx):
+    words, rows = ctx['task_instance'].xcom_pull(
+        task_ids=['o3_t_count_words', 'o3_t_count_rows'])
+    return f'summary: {words} / {rows}'
 
-    t1 = MoveFileOperator(task_id='o3_t_get_input_file',
-                          glob_pattern='*.txt',
-                          src_dir=FILE_INPUT_DIR,
-                          dest_dir=PROCESSING_DIR,
-                          fs_type='hdfs',
-                          max_files=1,
-                          depends_on_past=True)
 
-    def _get_t1_filepaths(**ctx):
-        return ctx['ti'].xcom_pull(task_ids='o3_t_get_input_file')
+with DAG('o3_d_dag2', default_args=DEFAULT_ARGS, schedule_interval='@once',
+         catchup=False) as _dag:
 
-    t2a = WordCountOperator(task_id='o3_t_count_words',
-                            filepath=_get_t1_filepaths,
-                            fs_type='hdfs')
+    ensure_dirs = EnsureDirOperator(task_id='o3_t_ensure_dirs_exist',
+                                    paths=[FILE_INPUT_DIR, PROCESSING_DIR],
+                                    fs_type='hdfs')
 
-    t2b = RowCountOperator(task_id='o3_t_count_rows',
-                           filepath=_get_t1_filepaths,
-                           fs_type='hdfs')
+    scan_input_dir = HDFSSensor(task_id='o3_s_scan_input_dir',
+                                hdfs_conn_id='hdfs_default',
+                                filepath=FILE_INPUT_DIR)
 
-    def _o3_t_summarize(**ctx):
-        words, rows = ctx['task_instance'].xcom_pull(
-            task_ids=['o3_t_count_words', 'o3_t_count_rows'])
-        return f'summary: {words} / {rows}'
+    move_input_file = MoveFileOperator(task_id='o3_t_get_input_file',
+                                       glob_pattern='*.txt',
+                                       src_dir=FILE_INPUT_DIR,
+                                       dest_dir=PROCESSING_DIR,
+                                       src_fs_type='hdfs',
+                                       dest_fs_type='hdfs',
+                                       max_files=1,
+                                       depends_on_past=True)
 
-    t3 = PythonOperator(task_id='o3_t_summarize',
-                        python_callable=_o3_t_summarize,
-                        provide_context=True)
+    count_words = WordCountOperator(task_id='o3_t_count_words',
+                                    filepath=_get_input_filepath,
+                                    fs_type='hdfs')
 
-    t4 = RemoveFileOperator(task_id='o3_t_remove_input',
-                            filepath=_get_t1_filepaths,
-                            fs_type='hdfs')
+    count_rows = RowCountOperator(task_id='o3_t_count_rows',
+                                  filepath=_get_input_filepath,
+                                  fs_type='hdfs')
+
+    summarize_counts = PythonOperator(task_id='o3_t_summarize',
+                                      python_callable=_summarize_counts,
+                                      provide_context=True)
+
+    remove_input_file = RemoveFileOperator(task_id='o3_t_remove_input',
+                                           filepath=_get_input_filepath,
+                                           fs_type='hdfs')
 
     # Workflow!
-    t0 >> s0 >> t1 >> [t2a, t2b] >> t3 >> t4
+    ensure_dirs >> scan_input_dir >> move_input_file >> \
+        [count_words, count_rows] >> summarize_counts >> remove_input_file
 
 
-dag2.doc_md = __doc__
+_dag.doc_md = __doc__

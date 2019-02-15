@@ -1,0 +1,9 @@
+---
+
+- name: restart jupyter
+  service:
+    name: jupyter
+    state: restarted
+  check_mode: no
+
+...

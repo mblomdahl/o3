@@ -6,11 +6,22 @@ etc_hosts_routing: |
   172.30.3.134    o3-slave2
   172.30.3.18     o3-slave3
 
+src_addr_whitelist:
+  - 37.123.179.154/32 # HQ
+  - 213.89.24.38/32   # Carl's Home
+  - 10.101.66.0/24
+  - 82.96.2.60/32     # Sto Office QA
+  - 10.110.132.0/24
+
 airflow_admins:
   - mblomdahl
   - cbackstrom
 
 hadoop_admins:
+  - mblomdahl
+  - cbackstrom
+
+jupyter_admins:
   - mblomdahl
   - cbackstrom
 

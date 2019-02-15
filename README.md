@@ -32,7 +32,7 @@ corresponding file in this repo, i.e. `environment-linux.yml` and `environment-m
 
     conda create --name o3 --yes python=3.6
     conda install --name o3 -c conda-forge --yes psycopg2 hdfs3 airflow libhdfs3=2.3.0=1 ansible netaddr \
-        ipython pandas fastavro pyhive
+        ipython pandas fastavro pyhive jupyter xlrd matplotlib
     conda env export --name o3 > environment-<platform>.yml
 
 
@@ -40,6 +40,15 @@ Provisioning
 ------------
 
     ansible-playbook -i inventories/<inventory>.ini provision.yml
+    
+    
+Jupyter
+-------
+
+During an Ansible provisioning a Jupyter Notebook will be deployed on port 8888 of the provisioned 
+server. It can also be executed in a development environment, like so:
+
+    conda activate o3; jupyter notebook --notebook-dir=o3/notebooks   
 
 
 Links

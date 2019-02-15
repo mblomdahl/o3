@@ -1,0 +1,21 @@
+
+galaxy_info:
+  author: Mats Blomdahl & Carl Bäckström
+  description: Provisioning of an Anaconda3 environment.
+
+  min_ansible_version: 2.7
+
+  platforms:
+    - name: EL
+      versions:
+        - 7
+    - name: Ubuntu
+      versions:
+        - Bionic
+
+  galaxy_tags:
+    - python
+    - anaconda3
+    - conda
+
+dependencies: []
