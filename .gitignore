@@ -25,4 +25,5 @@ ci-*
 logs/
 resources/*
 samples/
+pgdata/*
 airflow_home/*

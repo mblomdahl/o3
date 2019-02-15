@@ -273,5 +273,27 @@ def ingest_avro(schema_path: str, avro_path: str, target_table: str, host: str,
     cursor.execute(drop_temp_table_stmt)
 
 
+@aac.command('delete_dag')
+@click.argument('dag_id', type=str)
+def delete_dag(dag_id):
+    """Delete all references to DAG from Airflow DB."""
+
+    from airflow import settings
+    from airflow.jobs import BaseJob
+    from airflow.models import (XCom, TaskInstance, TaskFail, SlaMiss, DagRun,
+                                DagStat, DagModel)
+
+    session = settings.Session()
+
+    for model in [XCom, TaskInstance, TaskFail, SlaMiss, BaseJob, DagRun,
+                  DagStat, DagModel]:
+        for entity in session.query(model).filter(model.dag_id == dag_id).all():
+            click.echo(f'Deleting {entity!r}...')
+            session.delete(entity)
+
+    session.commit()
+    click.echo('Committed.')
+
+
 if __name__ == '__main__':
     aac()

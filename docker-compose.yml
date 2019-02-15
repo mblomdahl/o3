@@ -7,5 +7,7 @@ services:
     container_name: airflow_postgres
     ports:
       - 5432:5432
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
 
 ...
