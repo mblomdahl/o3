@@ -284,15 +284,22 @@ def delete_dag(dag_id):
                                 DagStat, DagModel)
 
     session = settings.Session()
-
+    things_deleted = 0
     for model in [XCom, TaskInstance, TaskFail, SlaMiss, BaseJob, DagRun,
                   DagStat, DagModel]:
         for entity in session.query(model).filter(model.dag_id == dag_id).all():
             click.echo(f'Deleting {entity!r}...')
             session.delete(entity)
+            things_deleted += 1
 
-    session.commit()
-    click.echo('Committed.')
+    if things_deleted:
+        session.commit()
+        session.close()
+        click.echo(f'Committed {things_deleted} deletions.')
+        exit(0)
+    else:
+        click.echo(f'Nothing to do for dag_id {dag_id!r}.')
+        exit(1)
 
 
 if __name__ == '__main__':
