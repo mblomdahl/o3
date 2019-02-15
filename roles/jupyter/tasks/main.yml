@@ -135,7 +135,7 @@
   tags: jupyter
 
 - name: ensure conda environment is updated based on environment-linux.yml
-  shell: bash -il -c 'conda env update --name o3 python=3.6 -f /home/jupyter/o3/environment-linux.yml'
+  shell: bash -il -c 'conda env update --name o3 -f /home/jupyter/o3/environment-linux.yml'
   become: yes
   become_user: jupyter
   notify:
