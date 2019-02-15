@@ -79,6 +79,7 @@
     - o3/dags/dag1.py
     - o3/dags/dag2.py
     - o3/dags/dag3.py
+    - o3/dags/dag4.py
     - o3/hooks/__init__.py
     - o3/hooks/hdfs_hook.py
     - o3/hooks/pyhive_hook.py
