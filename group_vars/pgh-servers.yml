@@ -3,7 +3,7 @@
 etc_hosts_routing: |
   10.192.62.188   o3-master
 
-external_dmz:
+src_addr_whitelist:
   - 37.123.179.154/32 # HQ
   - 213.89.24.38/32   # Carl's Home
   - 10.101.66.0/24

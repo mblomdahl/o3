@@ -6,9 +6,7 @@ etc_hosts_routing: |
   172.30.3.134    o3-slave2
   172.30.3.18     o3-slave3
 
-# TODO(mblomdahl): This could be named better such as allowed networks or something
-
-external_dmz:
+src_addr_whitelist:
   - 37.123.179.154/32 # HQ
   - 213.89.24.38/32   # Carl's Home
   - 10.101.66.0/24
