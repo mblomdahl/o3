@@ -26,5 +26,7 @@ logs/
 resources/*
 samples/
 pgdata/*
+prod-dags/
 airflow_home/*
 !airflow_home/dags/o3
+!airflow_home/dags/prod
