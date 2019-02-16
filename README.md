@@ -33,6 +33,7 @@ corresponding file in this repo, i.e. `environment-linux.yml` and `environment-m
     conda create --name o3 --yes python=3.6
     conda install --name o3 -c conda-forge --yes psycopg2 hdfs3 airflow libhdfs3=2.3.0=1 ansible netaddr \
         ipython pandas fastavro pyhive jupyter xlrd matplotlib
+    conda activate o3; pip install -e .
     conda env export --name o3 > environment-<platform>.yml
 
 
