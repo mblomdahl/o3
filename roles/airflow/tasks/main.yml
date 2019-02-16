@@ -66,6 +66,11 @@
     - airflow_home
     - airflow_home/dags
     - o3
+    - o3/o3
+    - o3/o3/dags
+    - o3/o3/hooks
+    - o3/o3/operators
+    - o3/o3/sensors
   become: yes
   become_user: airflow
   tags: airflow
@@ -78,6 +83,25 @@
     force: yes
   become: yes
   become_user: airflow
+  tags: airflow
+
+- name: symlink ~/airflow_home/dags/prod -> ~/o3/prod-dags
+  file:
+    src: /home/airflow/o3/prod-dags
+    dest: /home/airflow/airflow_home/dags/prod
+    state: link
+    force: yes
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: ensure prod-dags is copied to airflow home
+  copy:
+    src: prod-dags
+    dest: /home/airflow/o3/prod-dags
+  become: yes
+  become_user: airflow
+  ignore_errors: yes
   tags: airflow
 
 - name: ensure airflow config matches template
@@ -106,10 +130,10 @@
     - o3/constants.py
     - o3/utils.py
     - o3/dags/__init__.py
-    - o3/dags/dag1.py
-    - o3/dags/dag2.py
-    - o3/dags/dag3.py
-    - o3/dags/dag4.py
+    - o3/dags/o3_d_example_dag1.py
+    - o3/dags/o3_d_example_dag2.py
+    - o3/dags/o3_d_example_dag3.py
+    - o3/dags/o3_d_example_dag4.py
     - o3/hooks/__init__.py
     - o3/hooks/hdfs_hook.py
     - o3/hooks/pyhive_hook.py
@@ -123,6 +147,8 @@
     - o3/operators/row_count_operator.py
     - o3/operators/split_log_by_classifiers_operator.py
     - o3/operators/word_count_operator.py
+    - o3/sensors/__init__.py
+    - o3/sensors/hdfs_sensor.py
     - environment-linux.yml
   tags: airflow
 
