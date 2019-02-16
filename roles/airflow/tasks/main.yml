@@ -9,7 +9,25 @@
 
 - name: ensure airflow user has authorized_keys set
   authorized_key: user=airflow key="{{ lookup('file', 'public_keys/' + item + '_id_rsa.pub') }}"
-  with_items: "{{ ['hadoop'] + airflow_admins }}"
+  with_items: "{{ ['hadoop', 'airflow'] + airflow_admins }}"
+  tags: airflow
+
+- name: add private key for airflow user
+  copy:
+    dest: /home/airflow/.ssh/id_rsa
+    content: "{{ airflow_id_rsa }}"
+    mode: 0600
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: add public key for airflow user
+  copy:
+    src: public_keys/airflow_id_rsa.pub
+    dest: /home/airflow/.ssh/id_rsa.pub
+    mode: 0644
+  become: yes
+  become_user: airflow
   tags: airflow
 
 - name: assert hdfs /user/airflow dir exists
@@ -46,7 +64,18 @@
     state: directory
   with_items:
     - airflow_home
+    - airflow_home/dags
     - o3
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: symlink ~/airflow_home/dags/o3 -> ~/o3/o3/dags
+  file:
+    src: /home/airflow/o3/o3/dags
+    dest: /home/airflow/airflow_home/dags/o3
+    state: link
+    force: yes
   become: yes
   become_user: airflow
   tags: airflow
@@ -55,6 +84,7 @@
   template:
     src: airflow.cfg.j2
     dest: /home/airflow/airflow_home/airflow.cfg
+    mode: 0644
   become: yes
   become_user: airflow
   notify:
@@ -79,6 +109,7 @@
     - o3/dags/dag1.py
     - o3/dags/dag2.py
     - o3/dags/dag3.py
+    - o3/dags/dag4.py
     - o3/hooks/__init__.py
     - o3/hooks/hdfs_hook.py
     - o3/hooks/pyhive_hook.py
@@ -111,20 +142,14 @@
   register: o3_package_installed
   changed_when: "'Found existing installation: o3' not in o3_package_installed.stdout"
   notify:
-    - airflow initdb
     - restart airflow-webserver
     - restart airflow-scheduler
   tags: airflow
 
-- name: ensure airflow-enviroment matches template
-  template:
-    src: environment.j2
-    dest: /home/airflow/airflow-environment
-  become: yes
-  become_user: airflow
-  notify:
-    - restart airflow-webserver
-    - restart airflow-scheduler
+- name: ensure airflow-enviroment matches template (deprecated)
+  file:
+    path: /home/airflow/airflow-environment
+    state: absent
   tags: airflow
 
 - name: ensure airflow-environment is sourced in {{ bash_profile_file }}
@@ -132,8 +157,7 @@
     path: /home/airflow/{{ bash_profile_file }}
     marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-environment"
     block: |
-      set -a
-      source /home/airflow/airflow-environment
+      export AIRFLOW_HOME=/home/airflow/airflow_home
       export PATH=/usr/local/hadoop-2.9.2/bin:/usr/local/hadoop-2.9.2/sbin:$PATH
       export JAVA_HOME={{ java_home }}
   become: yes

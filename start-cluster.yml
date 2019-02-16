@@ -16,19 +16,19 @@
       tags: hadoop, hive, spark
 
     - name: start hdfs namenode and datanodes
-      shell: bash -c 'bash -l -c "start-dfs.sh"'
+      shell: bash -il -c 'start-dfs.sh'
       become: yes
       become_user: hadoop
       tags: hadoop
 
     - name: start yarn resourcemanager and nodemanagers
-      shell: bash -c 'bash -l -c "start-yarn.sh"'
+      shell: bash -il -c 'start-yarn.sh'
       become: yes
       become_user: hadoop
       tags: hadoop
 
     - name: start spark history server
-      shell: bash -c 'bash -l -c "start-history-server.sh"'
+      shell: bash -il -c 'start-history-server.sh'
       become: yes
       become_user: hadoop
       tags: spark

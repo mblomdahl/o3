@@ -1,23 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-### DAG 3 in Action (https://github.com/mblomdahl/o3/issues/21)
+### DAG 4
 
-Preparation:
-
-* Go to web UI, _Admin_ > _Connections_ > _Create_
-* Configure HDFS type connection with ID `hdfs_default`
-* Configure HiveServer2 connection with ID `hiveserver2_default`
-* Place Avro schema in HDFS as `/user/airflow/o3_analytics.avcs` and
-  locally as `/tmp/o3_analytics.avcs`
-
-What it does:
-
-1. Ensures the necessary directories exists in HDFS
-2. Waits for something to show up in local `/home/airflow/airflow_home/input/`
-3. Filters `event.log*` files into `/home/airflow/airflow_home/processing/` dir
-4. Splits filtered log files into a bunch of smaller log files
-5. Converts each of the smaller log files to Avro format
-6. Inserts the Avro files in a Hive table
+Same as DAG 3 (https://github.com/mblomdahl/o3/issues/21), but filtering
+out 99 % of input data.
 
 """
 
@@ -60,7 +46,7 @@ def _get_avro_output_path_for(task_id: str):
     return _get_avro_output_path
 
 
-with DAG('o3_d_dag3', default_args=DEFAULT_ARGS, schedule_interval='@once',
+with DAG('o3_d_dag4', default_args=DEFAULT_ARGS, schedule_interval=None,
          catchup=False) as _dag:
     ensure_local_and_hdfs_dirs = [
         EnsureDirOperator(
@@ -81,9 +67,9 @@ with DAG('o3_d_dag3', default_args=DEFAULT_ARGS, schedule_interval='@once',
         filepath=LOCAL_INPUT_DIR
     )
 
-    filter_out_3pct = FilterLogsToPercentageOperator(
-        task_id='o3_t_filter_to_3_pct',
-        percentage=3.0,
+    filter_out_99pct = FilterLogsToPercentageOperator(
+        task_id='o3_t_filter_to_99_pct',
+        percentage=99.0,
         glob_pattern='events.log*',
         src_dir=LOCAL_INPUT_DIR,
         dest_dir=LOCAL_PROCESSING_DIR,
@@ -96,7 +82,7 @@ with DAG('o3_d_dag3', default_args=DEFAULT_ARGS, schedule_interval='@once',
         task_id='o3_t_split_by_classifier',
         classifiers=LOG_CLASSIFIERS,
         src_filepath=lambda **ctx: ctx['ti'].xcom_pull(
-            task_ids='o3_t_filter_to_3_pct')[0],
+            task_ids='o3_t_filter_to_99_pct')[0],
         remove_src=True
     )
 
@@ -124,7 +110,7 @@ with DAG('o3_d_dag3', default_args=DEFAULT_ARGS, schedule_interval='@once',
         convert_to_avro_and_ingest_into_hive.append(convert_to_avro)
 
     # Workflow!
-    ensure_local_and_hdfs_dirs >> scan_input_dir >> filter_out_3pct \
+    ensure_local_and_hdfs_dirs >> scan_input_dir >> filter_out_99pct \
         >> split_logs >> convert_to_avro_and_ingest_into_hive
 
 _dag.doc_md = __doc__

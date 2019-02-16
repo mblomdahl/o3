@@ -275,7 +275,7 @@ def ingest_avro(schema_path: str, avro_path: str, target_table: str, host: str,
 
 @aac.command('delete_dag')
 @click.argument('dag_id', type=str)
-def delete_dag(dag_id):
+def delete_dag(dag_id: str):
     """Delete all references to DAG from Airflow DB."""
 
     from airflow import settings

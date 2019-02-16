@@ -27,3 +27,4 @@ resources/*
 samples/
 pgdata/*
 airflow_home/*
+!airflow_home/dags/o3

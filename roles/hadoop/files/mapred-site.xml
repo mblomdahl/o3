@@ -23,17 +23,27 @@
     </property>
 
     <property>
+        <name>yarn.app.mapreduce.am.resource.cpu-vcores</name>
+        <value>1</value>
+    </property>
+
+    <property>
         <name>yarn.app.mapreduce.am.resource.mb</name>
         <value>512</value>
     </property>
 
     <property>
         <name>mapreduce.map.memory.mb</name>
-        <value>256</value>
+        <value>512</value>
     </property>
 
     <property>
         <name>mapreduce.reduce.memory.mb</name>
-        <value>256</value>
+        <value>512</value>
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.webapp.address</name>
+        <value>o3-master:19888</value>
     </property>
 </configuration>

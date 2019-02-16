@@ -13,19 +13,19 @@ dependencies:
   - babel=2.6.0=py_1
   - backcall=0.1.0=py_0
   - bcrypt=3.1.4=py36h470a237_0
-  - bleach=2.1.2=py_0
+  - blas=1.0=mkl
   - boost-cpp=1.66.0=1
   - boto=2.49.0=py_0
   - bzip2=1.0.6=h1de35cc_1002
   - ca-certificates=2018.11.29=ha4d7672_0
   - certifi=2018.11.29=py36_1000
-  - cffi=1.11.5=py36h342bebf_1001
+  - cffi=1.12.0=py36h342bebf_0
   - chardet=3.0.4=py36_1003
   - click=6.7=py_1
   - colorama=0.3.9=py_1
   - configparser=3.5.0=py36_1001
   - croniter=0.3.27=py_0
-  - cryptography=2.5=py36hdbc3d79_0
+  - cryptography=2.5=py36hdbc3d79_1
   - curl=7.61.0=h93b3f91_2
   - cycler=0.10.0=py_1
   - cyrus-sasl=2.1.26=h9af42da_3
@@ -36,16 +36,13 @@ dependencies:
   - dogpile.cache=0.7.1=py_1000
   - entrypoints=0.3=py36_1000
   - extras=1.0.0=py_1
-  - fastavro=0.21.17=py36h1de35cc_0
+  - fastavro=0.21.18=py36h1de35cc_0
   - fixtures=3.0.0=py_0
   - flask=0.12.4=py_0
   - flask-admin=1.4.1=py36_0
-  - flask-appbuilder=1.11.1=py_1
   - flask-babel=0.11.1=py_0
   - flask-caching=1.3.3=py_0
-  - flask-login=0.2.11=py36_0
   - flask-openid=1.2.5=py36_1003
-  - flask-sqlalchemy=2.1=py36_1
   - flask-swagger=0.2.13=py36_0
   - flask-wtf=0.14.2=py_1
   - freetype=2.9.1=h597ad8a_1005
@@ -55,9 +52,10 @@ dependencies:
   - gunicorn=19.9.0=py36_1000
   - hdfs3=0.3.0=py36_1000
   - html5lib=1.0.1=py_0
-  - httplib2=0.12.0=py36_1000
+  - httplib2=0.12.1=py36_0
   - icu=58.2=h0a44026_1000
   - idna=2.8=py36_1000
+  - intel-openmp=2019.1=144
   - ipykernel=5.1.0=py36h24bf2e0_1002
   - ipython=7.2.0=py36h24bf2e0_1000
   - ipython_genutils=0.2.0=py_1
@@ -78,7 +76,12 @@ dependencies:
   - keystoneauth1=3.11.2=py_0
   - kiwisolver=1.0.1=py36h04f5b5a_1002
   - krb5=1.14.6=0
+  - libcxx=4.0.1=hcfea43d_1
+  - libcxxabi=4.0.1=hcfea43d_1
+  - libedit=3.1.20181209=hb402a30_0
+  - libffi=3.2.1=h475c297_4
   - libgcrypt=1.8.4=h0a44026_1000
+  - libgfortran=4.0.0=0
   - libgpg-error=1.32=h0a44026_1000
   - libgsasl=1.8.0=h9955c41_1003
   - libhdfs3=2.3=1
@@ -93,22 +96,25 @@ dependencies:
   - libxml2=2.9.8=hf14e9c8_1005
   - libxslt=1.1.32=h33a18ac_1002
   - lockfile=0.12.2=py_1
-  - lxml=3.8.0=py36_0
   - mako=1.0.7=py_1
   - markdown=2.6.11=py_0
   - markupsafe=1.1.0=py36h1de35cc_1000
   - matplotlib=3.0.2=py36_1002
   - matplotlib-base=3.0.2=py36hf043ca5_1002
   - mistune=0.8.4=py36h1de35cc_1000
+  - mkl=2019.1=144
   - mkl_fft=1.0.10=py36h1de35cc_1
   - mkl_random=1.0.2=py36h1702cab_2
   - monotonic=1.5=py_0
   - munch=2.3.2=py_0
   - nbconvert=5.3.1=py_1
   - nbformat=4.4.0=py_1
+  - ncurses=6.1=h0a44026_1
   - netaddr=0.7.19=py_0
   - netifaces=0.10.7=py36h1de35cc_1000
   - notebook=5.7.4=py36_1000
+  - numpy=1.15.4=py36hacdab7b_0
+  - numpy-base=1.15.4=py36h6575580_0
   - openssl=1.0.2p=h1de35cc_1002
   - os-client-config=1.29.0=py_0
   - os-service-types=1.5.0=py_0
@@ -119,11 +125,12 @@ dependencies:
   - pandoc=2.6=1
   - pandocfilters=1.4.2=py_1
   - paramiko=2.4.2=py36_1000
-  - parso=0.3.3=py_0
+  - parso=0.3.4=py_0
   - pbr=5.1.2=py_0
   - pendulum=1.4.4=py36_0
   - pexpect=4.6.0=py36_1000
   - pickleshare=0.7.5=py36_1000
+  - pip=19.0.1=py36_0
   - prettytable=0.7.2=py_2
   - prometheus_client=0.5.0=py_0
   - prompt_toolkit=2.0.8=py_0
@@ -134,6 +141,7 @@ dependencies:
   - pycparser=2.19=py_0
   - pycrypto=2.6.1=py36h1de35cc_1002
   - pygments=2.3.1=py_0
+  - pyhive=0.6.1=py36_0
   - pynacl=1.3.0=py36h1de35cc_1000
   - pyopenssl=19.0.0=py36_0
   - pyparsing=2.3.1=py_0
@@ -141,6 +149,7 @@ dependencies:
   - pyrsistent=0.14.10=py36h1de35cc_0
   - pysocks=1.6.8=py36_1002
   - python=3.6.6=h4a56312_1003
+  - python-daemon=2.1.2=py36_0
   - python-dateutil=2.8.0=py_0
   - python-editor=1.0.4=py_0
   - python-ironicclient=2.4.0=py36_1000
@@ -153,17 +162,20 @@ dependencies:
   - pyzmq=17.1.2=py36h111632d_1001
   - qt=5.6.2=h822fa55_1013
   - qtconsole=4.4.3=py_0
+  - readline=7.0=h1de35cc_5
   - requests=2.21.0=py36_1000
   - requestsexceptions=1.4.0=py_0
   - sasl=0.2.1=py36h0a44026_1001
   - send2trash=1.5.0=py_0
   - setproctitle=1.1.10=py36h1de35cc_1001
+  - setuptools=40.7.3=py36_0
   - shade=1.30.0=py36_1001
   - simplejson=3.16.1=py36h470a237_0
   - sip=4.18.1=py36h0a44026_1000
   - six=1.12.0=py36_1000
   - smmap2=2.0.5=py_0
   - sqlalchemy=1.1.18=py36h470a237_0
+  - sqlite=3.26.0=ha441bb4_0
   - stevedore=1.30.0=py_0
   - tabulate=0.7.7=py36_0
   - tenacity=4.8.0=py36_0
@@ -172,6 +184,7 @@ dependencies:
   - testtools=2.3.0=py_1
   - thrift=0.11.0=py36h0a44026_1001
   - thrift_sasl=0.3.0=py36h1de35cc_1001
+  - tk=8.6.8=ha441bb4_0
   - tornado=5.1.1=py36h1de35cc_1000
   - traitlets=4.3.2=py36_1000
   - tzlocal=1.5.1=py_0
@@ -181,33 +194,22 @@ dependencies:
   - wcwidth=0.1.7=py_1
   - webencodings=0.5.1=py_1
   - werkzeug=0.14.1=py_0
+  - wheel=0.32.3=py36_0
   - widgetsnbextension=3.4.2=py36_1000
   - wrapt=1.11.1=py36h1de35cc_0
   - wtforms=2.1=py36_0
   - xlrd=1.2.0=py_0
+  - xz=5.2.4=h1de35cc_4
   - yaml=0.1.7=h1de35cc_1001
   - zeromq=4.2.5=h0a44026_1006
-  - zope.deprecation=4.4.0=py_0
-  - blas=1.0=mkl
-  - intel-openmp=2019.1=144
-  - libcxx=4.0.1=hcfea43d_1
-  - libcxxabi=4.0.1=hcfea43d_1
-  - libedit=3.1.20181209=hb402a30_0
-  - libffi=3.2.1=h475c297_4
-  - libgfortran=3.0.1=h93005f0_2
-  - mkl=2019.1=144
-  - ncurses=6.1=h0a44026_1
-  - numpy=1.15.4=py36hacdab7b_0
-  - numpy-base=1.15.4=py36h6575580_0
-  - pip=19.0.1=py36_0
-  - pyhive=0.6.1=py36_0
-  - python-daemon=2.1.2=py36_0
-  - readline=7.0=h1de35cc_5
-  - setuptools=40.7.3=py36_0
-  - sqlite=3.26.0=ha441bb4_0
-  - tk=8.6.8=ha441bb4_0
-  - wheel=0.32.3=py36_0
-  - xz=5.2.4=h1de35cc_4
   - zlib=1.2.11=h1de35cc_3
+  - zope.deprecation=4.4.0=py_0
   - pip:
-    - apache-airflow==1.10.1
+    - bleach==2.1.4
+    - docutils==0.14
+    - flask-appbuilder==1.12.3
+    - flask-login==0.4.1
+    - flask-sqlalchemy==2.3.2
+    - funcsigs==1.0.0
+    - lxml==4.3.1
+    - ordereddict==1.1
