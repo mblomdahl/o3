@@ -131,6 +131,7 @@
     name: anaconda3
   vars:
     anaconda3_user: airflow
+    anaconda3_environment_name: o3
     anaconda3_environment_file: /home/airflow/o3/environment-linux.yml
   tags: airflow
 

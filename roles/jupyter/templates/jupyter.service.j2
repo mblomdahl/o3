@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=jupyter
 Group=jupyter
-ExecStart=/bin/bash -ilc 'conda activate o3 && jupyter notebook'
+ExecStart=/bin/bash -ilc 'conda activate jupyter && jupyter notebook'
 WorkingDirectory=/home/jupyter/notebooks
 RestartSec=5s
 

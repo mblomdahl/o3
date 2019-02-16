@@ -1,9 +1,9 @@
 ---
 
-- name: ensure and anaconda3_user and anaconda3_environment_file is set
+- name: ensure and anaconda3 user and anaconda3 environment name/file is set
   fail:
     msg: "Missing something..."
-  when: not (anaconda3_user and anaconda3_environment_file)
+  when: not (anaconda3_user and anaconda3_environment_name and anaconda3_environment_file)
   tags: anaconda3
 
 - name: ensure bzip2 is installed (required by anaconda installer on AWS CentOS)
@@ -79,16 +79,16 @@
   tags: anaconda3
 
 - name: ensure conda environment is created based on environment-linux.yml
-  shell: bash -il -c 'conda env create --name o3 python=3.6 -f {{ anaconda3_environment_file }}'
+  shell: bash -il -c 'conda env create --name {{ anaconda3_environment_name }} python=3.6 -f {{ anaconda3_environment_file }}'
   args:
-    creates: /home/{{ anaconda3_user }}/anaconda3/envs/o3
+    creates: /home/{{ anaconda3_user }}/anaconda3/envs/{{ anaconda3_environment_name }}
   become: yes
   become_user: "{{ anaconda3_user }}"
   register: conda_environment_created
   tags: anaconda3
 
 - name: ensure conda environment is updated based on environment-linux.yml
-  shell: bash -il -c 'conda env update --name o3 -f {{ anaconda3_environment_file }}'
+  shell: bash -il -c 'conda env update --name {{ anaconda3_environment_name }} -f {{ anaconda3_environment_file }}'
   become: yes
   become_user: "{{ anaconda3_user }}"
   when: conda_environment_created is not changed
