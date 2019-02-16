@@ -25,19 +25,19 @@
       tags: hive
 
     - name: stop spark history server
-      shell: bash -c 'bash -l -c "stop-history-server.sh"'
+      shell: bash -il -c 'stop-history-server.sh'
       become: yes
       become_user: hadoop
       tags: spark
 
     - name: stop yarn resourcemanager and nodemanagers
-      shell: bash -c 'bash -l -c "stop-yarn.sh"'
+      shell: bash -il -c 'stop-yarn.sh'
       become: yes
       become_user: hadoop
       tags: hadoop
 
     - name: stop hdfs namenode and datanodes
-      shell: bash -c 'bash -l -c "stop-dfs.sh"'
+      shell: bash -il -c 'stop-dfs.sh'
       become: yes
       become_user: hadoop
       tags: hadoop
