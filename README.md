@@ -20,7 +20,7 @@ First setup [conda](https://conda.io/projects/conda/en/latest/) with Python 3.6,
     conda activate o3; pip install -e .
     export AIRFLOW_HOME=$(pwd)/airflow_home
     airflow initdb
-    # Update newly-generated airflow.cfg in AIRFLOW_HOME by setting `dags_folder=$(pwd)/o3/dags`.
+    # Update newly-generated airflow.cfg in AIRFLOW_HOME by setting `dags_folder=$(pwd)/airflow_home/dags`.
     airflow webserver -p 8080
     
     

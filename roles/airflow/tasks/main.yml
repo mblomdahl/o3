@@ -64,7 +64,18 @@
     state: directory
   with_items:
     - airflow_home
+    - airflow_home/dags
     - o3
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: symlink ~/airflow_home/dags/o3 -> ~/o3/o3/dags
+  file:
+    src: /home/airflow/o3/o3/dags
+    dest: /home/airflow/airflow_home/dags/o3
+    state: link
+    force: yes
   become: yes
   become_user: airflow
   tags: airflow
@@ -131,7 +142,6 @@
   register: o3_package_installed
   changed_when: "'Found existing installation: o3' not in o3_package_installed.stdout"
   notify:
-    - airflow initdb
     - restart airflow-webserver
     - restart airflow-scheduler
   tags: airflow
