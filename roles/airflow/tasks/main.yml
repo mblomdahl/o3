@@ -9,7 +9,25 @@
 
 - name: ensure airflow user has authorized_keys set
   authorized_key: user=airflow key="{{ lookup('file', 'public_keys/' + item + '_id_rsa.pub') }}"
-  with_items: "{{ ['hadoop'] + airflow_admins }}"
+  with_items: "{{ ['hadoop', 'airflow'] + airflow_admins }}"
+  tags: airflow
+
+- name: add private key for airflow user
+  copy:
+    dest: /home/airflow/.ssh/id_rsa
+    content: "{{ airflow_id_rsa }}"
+    mode: 0600
+  become: yes
+  become_user: airflow
+  tags: airflow
+
+- name: add public key for airflow user
+  copy:
+    src: public_keys/airflow_id_rsa.pub
+    dest: /home/airflow/.ssh/id_rsa.pub
+    mode: 0644
+  become: yes
+  become_user: airflow
   tags: airflow
 
 - name: assert hdfs /user/airflow dir exists
@@ -55,6 +73,7 @@
   template:
     src: airflow.cfg.j2
     dest: /home/airflow/airflow_home/airflow.cfg
+    mode: 0644
   become: yes
   become_user: airflow
   notify:
