@@ -74,8 +74,8 @@ with DAG('o3_d_dag4', default_args=DEFAULT_ARGS, schedule_interval=None,
         src_dir=LOCAL_INPUT_DIR,
         dest_dir=LOCAL_PROCESSING_DIR,
         max_files=1,
-        remove_src=False
-        # depends_on_past=True
+        remove_src=True,
+        depends_on_past=True
     )
 
     split_logs = SplitLogByClassifiersOperator(
@@ -94,7 +94,8 @@ with DAG('o3_d_dag4', default_args=DEFAULT_ARGS, schedule_interval=None,
             avro_schema_path='/tmp/o3_analytics.avsc',
             src_filepath=_get_split_input_filepath_for_classifier(classifier),
             validate_percentage=10.0,
-            remove_src=True
+            remove_src=True,
+            depends_on_past=True
         )
 
         ingest_into_hive = IngestAvroIntoHiveOperator(
