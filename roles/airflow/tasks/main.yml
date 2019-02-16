@@ -117,15 +117,10 @@
     - restart airflow-scheduler
   tags: airflow
 
-- name: ensure airflow-enviroment matches template
-  template:
-    src: environment.j2
-    dest: /home/airflow/airflow-environment
-  become: yes
-  become_user: airflow
-  notify:
-    - restart airflow-webserver
-    - restart airflow-scheduler
+- name: ensure airflow-enviroment matches template (deprecated)
+  file:
+    path: /home/airflow/airflow-environment
+    state: absent
   tags: airflow
 
 - name: ensure airflow-environment is sourced in {{ bash_profile_file }}
@@ -133,8 +128,7 @@
     path: /home/airflow/{{ bash_profile_file }}
     marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-environment"
     block: |
-      set -a
-      source /home/airflow/airflow-environment
+      export AIRFLOW_HOME=/home/airflow/airflow_home
       export PATH=/usr/local/hadoop-2.9.2/bin:/usr/local/hadoop-2.9.2/sbin:$PATH
       export JAVA_HOME={{ java_home }}
   become: yes
