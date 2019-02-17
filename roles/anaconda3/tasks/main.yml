@@ -17,7 +17,6 @@
     src: resources/Anaconda3-2018.12-Linux-x86_64.sh
     dest: /tmp/Anaconda3-2018.12-Linux-x86_64.sh
     mode: u=rwx,g=rwx,o=rwx
-    owner: root
   tags: anaconda3
 
 - name: ensure anacoda3 is installed

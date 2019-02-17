@@ -95,26 +95,13 @@
   become_user: airflow
   tags: airflow
 
-- name: ensure prod-dags is copied to airflow home
+- name: ensure prod-dags is copied to o3 project root
   copy:
-    src: prod-dags
+    src: prod-dags/dags/
     dest: /home/airflow/o3/prod-dags
   become: yes
   become_user: airflow
   ignore_errors: yes
-  tags: airflow
-
-- name: ensure airflow config matches template
-  template:
-    src: airflow.cfg.j2
-    dest: /home/airflow/airflow_home/airflow.cfg
-    mode: 0644
-  become: yes
-  become_user: airflow
-  notify:
-    - airflow initdb
-    - restart airflow-webserver
-    - restart airflow-scheduler
   tags: airflow
 
 - name: ensure latest code base is copied to remote server
@@ -152,6 +139,19 @@
     - environment-linux.yml
   tags: airflow
 
+- name: ensure airflow config matches template
+  template:
+    src: airflow.cfg.j2
+    dest: /home/airflow/airflow_home/airflow.cfg
+    mode: 0644
+  become: yes
+  become_user: airflow
+  notify:
+    - airflow initdb
+    - restart airflow-webserver
+    - restart airflow-scheduler
+  tags: airflow
+
 - name: ensure anaconda3 environment is set up
   include_role:
     name: anaconda3
@@ -179,7 +179,7 @@
     state: absent
   tags: airflow
 
-- name: ensure airflow-environment is sourced in {{ bash_profile_file }}
+- name: ensure AIRFLOW_HOME, PATH and JAVA_HOME is set in {{ bash_profile_file }}
   blockinfile:
     path: /home/airflow/{{ bash_profile_file }}
     marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-environment"
