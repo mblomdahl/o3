@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-### DAG 3 in Action (https://github.com/mblomdahl/o3/issues/21)
+### Example DAG 3 in Action (https://github.com/mblomdahl/o3/issues/21)
 
 Preparation:
 
@@ -60,7 +60,7 @@ def _get_avro_output_path_for(task_id: str):
     return _get_avro_output_path
 
 
-with DAG('o3_d_dag3', default_args=DEFAULT_ARGS, schedule_interval='@once',
+with DAG('o3_d_example_dag3', default_args=DEFAULT_ARGS, schedule_interval='@once',
          catchup=False) as _dag:
     ensure_local_and_hdfs_dirs = [
         EnsureDirOperator(

@@ -102,6 +102,18 @@
   when: ansible_distribution == 'CentOS'
   tags: common
 
+- name: ensure lvm vg_sys01 exists
+  shell: vgdisplay vg_sys01
+  changed_when: false
+  ignore_errors: yes
+  register: vgdisplay_vg_sys01
+  tags: common
+
+- name: configure lvm logical volumes in vg_sys01
+  import_tasks: lvm-setup.yml
+  when: not (vgdisplay_vg_sys01 is failed)
+  tags: common
+
 - name: extract hadoop tarball
   unarchive:
     src: resources/hadoop-2.9.2.tar.gz
@@ -167,7 +179,7 @@
   when: extract_spark_tarball is changed
   tags: common
 
-- name: create root log dir for hadoop user services
+- name: ensure log dir for hadoop services exists with correct owner
   file:
     path: /var/log/{{ item }}
     owner: hadoop

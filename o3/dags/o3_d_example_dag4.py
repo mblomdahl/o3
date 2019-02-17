@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-### DAG 4
+### Example DAG 4
 
 Same as DAG 3 (https://github.com/mblomdahl/o3/issues/21), but filtering
 out 99 % of input data.
@@ -46,7 +46,7 @@ def _get_avro_output_path_for(task_id: str):
     return _get_avro_output_path
 
 
-with DAG('o3_d_dag4', default_args=DEFAULT_ARGS, schedule_interval=None,
+with DAG('o3_d_example_dag4', default_args=DEFAULT_ARGS, schedule_interval=None,
          catchup=False) as _dag:
     ensure_local_and_hdfs_dirs = [
         EnsureDirOperator(

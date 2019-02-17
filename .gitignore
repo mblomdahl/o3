@@ -24,7 +24,11 @@ ci-*
 *.egg-info/
 logs/
 resources/*
+anaconda*
 samples/
 pgdata/*
+prod-dags/
 airflow_home/*
 !airflow_home/dags/o3
+!airflow_home/dags/prod
+rsync-*

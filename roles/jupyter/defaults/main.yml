@@ -1,5 +1,7 @@
 ---
 
+src_addr_whitelist: []
+
 jupyter_admins: []
 
 # The password is set to to jupyter to avoid questions about token.

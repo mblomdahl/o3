@@ -1,0 +1,41 @@
+---
+
+- name: extend /usr/local filesystem to 3g
+  lvol:
+    vg: vg_sys01
+    lv: lv_usr_local
+    size: 3g
+    resizefs: yes
+
+- name: extend /tmp filesystem to 1g
+  lvol:
+    vg: vg_sys01
+    lv: lv_tmp
+    size: 1g
+    resizefs: yes
+
+- name: create 8g lv_var_log_hadoop for /var/log/hadoop
+  lvol:
+    vg: vg_sys01
+    lv: lv_var_log_hadoop
+    size: 8g
+    resizefs: yes
+  register: lv_var_log_hadoop
+
+- name: format lv_var_log_hadoop as xfs
+  filesystem:
+    fstype: xfs
+    dev: /dev/vg_sys01/lv_var_log_hadoop
+    resizefs: yes
+    force: no
+  when: lv_var_log_hadoop is changed
+
+- name: mount lv_var_log_hadoop as /var/log/hadoop
+  mount:
+    name: /var/log/hadoop
+    fstype: xfs
+    src: /dev/vg_sys01/lv_var_log_hadoop
+    state: mounted
+    boot: yes
+
+...

@@ -27,25 +27,21 @@
   become_user: jupyter
   tags: jupyter
 
-- name: ensure ~/o3 and ~/notebooks ~/.jupyter dir exists
+- name: ensure ~/notebooks and ~/.jupyter dir exists
   file:
     path: /home/jupyter/{{ item }}
     state: directory
   become: yes
   become_user: jupyter
   with_items:
-    - o3
     - notebooks
     - .jupyter
   tags: jupyter
 
-- name: ensure notebooks dir in o3 python package does not exist
+- name: ensure o3 directory does not exist
   file:
-    path: /home/jupyter/o3/{{ item }}
+    path: /home/jupyter/o3
     state: absent
-  with_items:
-    - notebooks
-    - o3/notebooks
   tags: jupyter
 
 - name: ensure sample notebook is copied to the server
@@ -59,7 +55,7 @@
 - name: ensure latest environment is present on the server
   copy:
     src: environment-linux.yml
-    dest: /home/jupyter/o3/environment-linux.yml
+    dest: /home/jupyter/environment-linux.yml
   become: yes
   become_user: jupyter
   tags: jupyter
@@ -69,7 +65,8 @@
     name: anaconda3
   vars:
     anaconda3_user: jupyter
-    anaconda3_environment_file: /home/jupyter/o3/environment-linux.yml
+    anaconda3_environment_name: jupyter
+    anaconda3_environment_file: /home/jupyter/environment-linux.yml
   tags: jupyter
 
 - name: ensure jupyter config matches template
@@ -89,6 +86,16 @@
   register: add_jupyter_services
   notify:
     - restart jupyter
+  tags: jupyter
+
+- name: ensure traffic is allowed to jupyter port 8888 from whitelisted sources
+  firewalld:
+    rich_rule: 'rule family=ipv4 source address={{ item }} port port=8888 protocol=tcp accept'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items: "{{ src_addr_whitelist }}"
+  when: ansible_distribution == 'CentOS'
   tags: jupyter
 
 - name: ensure jupyter service is running and auto-starting

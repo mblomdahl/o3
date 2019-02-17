@@ -66,6 +66,11 @@
     - airflow_home
     - airflow_home/dags
     - o3
+    - o3/o3
+    - o3/o3/dags
+    - o3/o3/hooks
+    - o3/o3/operators
+    - o3/o3/sensors
   become: yes
   become_user: airflow
   tags: airflow
@@ -80,17 +85,23 @@
   become_user: airflow
   tags: airflow
 
-- name: ensure airflow config matches template
-  template:
-    src: airflow.cfg.j2
-    dest: /home/airflow/airflow_home/airflow.cfg
-    mode: 0644
+- name: symlink ~/airflow_home/dags/prod -> ~/o3/prod-dags
+  file:
+    src: /home/airflow/o3/prod-dags
+    dest: /home/airflow/airflow_home/dags/prod
+    state: link
+    force: yes
   become: yes
   become_user: airflow
-  notify:
-    - airflow initdb
-    - restart airflow-webserver
-    - restart airflow-scheduler
+  tags: airflow
+
+- name: ensure prod-dags is copied to o3 project root
+  copy:
+    src: prod-dags/dags/
+    dest: /home/airflow/o3/prod-dags
+  become: yes
+  become_user: airflow
+  ignore_errors: yes
   tags: airflow
 
 - name: ensure latest code base is copied to remote server
@@ -106,10 +117,10 @@
     - o3/constants.py
     - o3/utils.py
     - o3/dags/__init__.py
-    - o3/dags/dag1.py
-    - o3/dags/dag2.py
-    - o3/dags/dag3.py
-    - o3/dags/dag4.py
+    - o3/dags/o3_d_example_dag1.py
+    - o3/dags/o3_d_example_dag2.py
+    - o3/dags/o3_d_example_dag3.py
+    - o3/dags/o3_d_example_dag4.py
     - o3/hooks/__init__.py
     - o3/hooks/hdfs_hook.py
     - o3/hooks/pyhive_hook.py
@@ -123,7 +134,22 @@
     - o3/operators/row_count_operator.py
     - o3/operators/split_log_by_classifiers_operator.py
     - o3/operators/word_count_operator.py
+    - o3/sensors/__init__.py
+    - o3/sensors/hdfs_sensor.py
     - environment-linux.yml
+  tags: airflow
+
+- name: ensure airflow config matches template
+  template:
+    src: airflow.cfg.j2
+    dest: /home/airflow/airflow_home/airflow.cfg
+    mode: 0644
+  become: yes
+  become_user: airflow
+  notify:
+    - airflow initdb
+    - restart airflow-webserver
+    - restart airflow-scheduler
   tags: airflow
 
 - name: ensure anaconda3 environment is set up
@@ -131,6 +157,7 @@
     name: anaconda3
   vars:
     anaconda3_user: airflow
+    anaconda3_environment_name: o3
     anaconda3_environment_file: /home/airflow/o3/environment-linux.yml
   tags: airflow
 
@@ -152,7 +179,7 @@
     state: absent
   tags: airflow
 
-- name: ensure airflow-environment is sourced in {{ bash_profile_file }}
+- name: ensure AIRFLOW_HOME, PATH and JAVA_HOME is set in {{ bash_profile_file }}
   blockinfile:
     path: /home/airflow/{{ bash_profile_file }}
     marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-environment"
@@ -197,6 +224,16 @@
 - name: ensure daemon-reload is run on airflow service modification
   shell: systemctl daemon-reload
   when: add_airflow_services is changed
+  tags: airflow
+
+- name: ensure traffic is allowed to airflow port {{ airflow_port }} from whitelisted sources
+  firewalld:
+    rich_rule: 'rule family=ipv4 source address={{ item }} port port={{ airflow_port }} protocol=tcp accept'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items: "{{ src_addr_whitelist }}"
+  when: ansible_distribution == 'CentOS'
   tags: airflow
 
 - name: ensure airflow services is running and auto-starting
