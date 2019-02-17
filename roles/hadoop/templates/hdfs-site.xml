@@ -19,12 +19,12 @@
 <configuration>
     <property>
         <name>dfs.namenode.name.dir</name>
-        <value>/home/hadoop/data/nameNode</value>
+        <value>{{ hdfs_data_root_path }}/nameNode</value>
     </property>
 
     <property>
         <name>dfs.datanode.data.dir</name>
-        <value>/home/hadoop/data/dataNode</value>
+        <value>{{ hdfs_data_root_path }}/dataNode</value>
     </property>
 
     <property>

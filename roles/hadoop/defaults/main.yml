@@ -1,5 +1,7 @@
 ---
 
+hdfs_data_root_path: /home/hadoop/data
+
 yarn_nodemanager_resource_memory_mb: 1536
 
 yarn_scheduler_maximum_allocation_mb: 1536

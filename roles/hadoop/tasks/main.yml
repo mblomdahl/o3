@@ -6,6 +6,13 @@
     dest: /usr/local/hadoop-2.9.2/etc/hadoop/core-site.xml
   tags: hadoop
 
+- name: ensure {{ hdfs_data_root_path }} exists
+  file:
+    path: "{{ hdfs_data_root_path }}"
+    state: directory
+    owner: hadoop
+  tags: hadoop
+
 - name: configure hadoop hdfs-site.xml
   template:
     src: hdfs-site.xml
