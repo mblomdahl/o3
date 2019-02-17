@@ -88,6 +88,16 @@
     - restart jupyter
   tags: jupyter
 
+- name: ensure traffic is allowed to jupyter port 8888 from whitelisted sources
+  firewalld:
+    rich_rule: 'rule family=ipv4 source address={{ item }} port port=8888 protocol=tcp accept'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items: "{{ src_addr_whitelist }}"
+  when: ansible_distribution == 'CentOS'
+  tags: jupyter
+
 - name: ensure jupyter service is running and auto-starting
   systemd:
     name: jupyter
