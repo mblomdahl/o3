@@ -12,7 +12,7 @@ setup(
     install_requires=[
         'psycopg2',
         'hdfs3',
-        'apache-airflow',
+        'apache-airflow[password,ssh]',
         'ansible',
         'netaddr',
         'ipython',

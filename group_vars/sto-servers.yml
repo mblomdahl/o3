@@ -14,11 +14,12 @@ src_addr_whitelist:
 yarn_nodemanager_resource_memory_mb: 12288
 yarn_scheduler_maximum_allocation_mb: 12288
 
-airflow_admins:
+hadoop_admins:
   - mblomdahl
   - cbackstrom
 
-hadoop_admins:
+airflow_port: 8090
+airflow_admins:
   - mblomdahl
   - cbackstrom
 
