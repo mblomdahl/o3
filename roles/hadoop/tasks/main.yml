@@ -53,7 +53,7 @@
     - name: format hdfs namenode
       shell: /usr/local/hadoop-2.9.2/bin/hdfs namenode -format -nonInteractive
       args:
-        creates: /home/hadoop/data/nameNode/current/VERSION
+        creates: '{{ hdfs_data_root_path }}/nameNode/current/VERSION'
       tags: hadoop
 
     - name: assert dfs is running
