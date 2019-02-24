@@ -4,7 +4,7 @@
 
 import os
 
-from airflow.exceptions import AirflowException
+from airflow.exceptions import AirflowException, AirflowSkipException
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
@@ -154,6 +154,10 @@ class IngestAvroIntoHiveOperator(BaseOperator):
                 src_filepath = eval(self.src_filepath_str)
             except SyntaxError:
                 src_filepath = self.src_filepath_str
+
+        if not src_filepath:
+            self.log.info('No filepath(s) received, skipping.')
+            raise AirflowSkipException()
 
         if isinstance(src_filepath, list):
             src_filepaths = src_filepath
