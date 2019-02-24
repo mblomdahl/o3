@@ -7,11 +7,11 @@
     size: 3g
     resizefs: yes
 
-- name: extend /tmp filesystem to 1g
+- name: extend /tmp filesystem to 4g
   lvol:
     vg: vg_sys01
     lv: lv_tmp
-    size: 1g
+    size: 4g
     resizefs: yes
 
 - name: create 8g lv_var_log_hadoop for /var/log/hadoop
