@@ -24,10 +24,14 @@ def aac():
 @click.argument('input_path', type=click.Path(exists=True, dir_okay=False))
 @click.argument('percentage', type=float)
 @click.argument('output_path', type=click.Path(dir_okay=False))
-def filter_logs(input_path: str, percentage: float, output_path: str):
+@click.option('-F', '--filter_str', type=str, multiple=True,
+              help='Exact string to pre-filter input by')
+def filter_logs(input_path: str, percentage: float, output_path: str,
+                filter_str: list):
     """Filter out percentage of IDs to output path."""
 
-    click.echo(filter_to_percentage(input_path, percentage, output_path))
+    click.echo(filter_to_percentage(input_path, percentage, output_path,
+                                    prefilter_by=filter_str))
 
 
 @aac.command('split_logs')

@@ -31,7 +31,7 @@ def open_log_file(log_path: str) -> typing.BinaryIO:
 
 
 def filter_to_percentage(input_path: str, percentage: float,
-                         output_path: str) -> dict:
+                         output_path: str, prefilter_by: list = None) -> dict:
     """Filter out *percentage* unique identifiers from input to output path."""
 
     print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
@@ -52,7 +52,7 @@ def filter_to_percentage(input_path: str, percentage: float,
             else:
                 return True
 
-    lines_in, lines_ignored, lines_out = 0, 0, 0
+    lines_in, lines_ignored, lines_prefiltered_out, lines_out = 0, 0, 0, 0
     ids_in, ids_out = set(), set()
     with open_log_file(input_path) as input_file:
         if os.path.exists(output_path):
@@ -61,6 +61,14 @@ def filter_to_percentage(input_path: str, percentage: float,
             for line in input_file:
                 lines_in += 1
                 try:
+                    if prefilter_by:
+                        for match_str in prefilter_by:
+                            if bytes(match_str, 'utf8') in line:
+                                break
+                        else:
+                            lines_prefiltered_out += 1
+                            continue
+
                     raw_json_data = line.split(b'\t', maxsplit=5)[4]
                     if raw_json_data == b'{"d":}\n':
                         lines_ignored += 1
@@ -88,14 +96,15 @@ def filter_to_percentage(input_path: str, percentage: float,
     print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
           f'Wrote {lines_out} lines ({len(ids_out)} IDs) '
           f'of {lines_in} lines ({len(ids_in)} IDs) '
-          f'to {output_path!r}, ignoring {lines_ignored} input lines '
-          f'(PID {os.getpid()}).')
+          f'to {output_path!r}, pre-filtering out {lines_prefiltered_out} and '
+          f'ignoring {lines_ignored} input lines (PID {os.getpid()}).')
 
     return {
         'output_path': os.path.abspath(output_path),
         'metrics': {
             'lines_in': lines_in,
             'lines_ignored': lines_ignored,
+            'lines_prefiltered_out': lines_prefiltered_out,
             'lines_out': lines_out,
             'ids_in': len(ids_in),
             'ids_out': len(ids_out)

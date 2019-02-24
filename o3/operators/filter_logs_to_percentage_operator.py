@@ -20,6 +20,8 @@ class FilterLogsToPercentageOperator(BaseOperator):
     :param str dest_dir: Directory to write filtered output to.
     :param str src_fs_type: Source file system, only 'local' supported.
     :param str dest_fs_type: Destination file system, only 'local' supported.
+    :param list match_strs: Optionally pre-filter input lines by
+                            one or more exact strings.
     :param int max_files: Maximum number of files to filter.
     :param bool remove_src: Remove input file after filtering.
     """
@@ -30,8 +32,8 @@ class FilterLogsToPercentageOperator(BaseOperator):
     def __init__(self, percentage: float,
                  glob_pattern: str, src_dir: str, dest_dir: str,
                  src_fs_type: str = 'local', dest_fs_type: str = 'local',
-                 max_files: int = None, remove_src: bool = True,
-                 *args, **kwargs):
+                 match_strs: list = None, max_files: int = None,
+                 remove_src: bool = True, *args, **kwargs):
         super(FilterLogsToPercentageOperator, self).__init__(*args, **kwargs)
 
         if 0.0 <= percentage <= 100.0:
@@ -40,6 +42,7 @@ class FilterLogsToPercentageOperator(BaseOperator):
             raise AirflowException(f'Out-of-range percentage {percentage!r}.')
 
         self.glob_pattern = glob_pattern
+        self.match_strs = match_strs
         self.src_dir = src_dir.rstrip('/')
         self.dest_dir = dest_dir.rstrip('/')
 
@@ -74,7 +77,8 @@ class FilterLogsToPercentageOperator(BaseOperator):
             for src_path in glob.glob(src_dir_glob):
                 dest_path = _get_dest_path(src_path)
                 self.log.info(f'Filtering local {src_path} to {dest_path}...')
-                filter_to_percentage(src_path, self.percentage, dest_path)
+                filter_to_percentage(src_path, self.percentage, dest_path,
+                                     prefilter_by=self.match_strs)
                 dest_paths.append(dest_path)
                 if self.remove_src:
                     self.log.info(f'Removing {src_path}.')
