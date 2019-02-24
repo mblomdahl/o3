@@ -14,9 +14,11 @@ class SplitLogByClassifiersOperator(BaseOperator):
     """Splits log lines by a list of a classifiers.
 
     :param list classifiers: Classifiers expected to be matchable by line.
-    :param src_filepath: Source file path or callable that produces one.
+    :param src_filepath: Source file path or callable that produces one
+                         (templated).
     :param bool remove_src: Remove input file after splitting.
     """
+    template_fields = ['src_filepath_str']
     ui_color = '#ffefeb'
 
     @apply_defaults

@@ -15,7 +15,7 @@ class FilterLogsToPercentageOperator(BaseOperator):
     """Filters input files to a percentage, from src dir glob match to dest dir.
 
     :param float percentage: Percentage of input to keep, e.g. `3.0` for 3 %.
-    :param str glob_pattern: Glob pattern, e.g. '*.log'.
+    :param str glob_pattern: Glob pattern, e.g. '*.log' (templated).
     :param str src_dir: Directory path to find input in.
     :param str dest_dir: Directory to write filtered output to.
     :param str src_fs_type: Source file system, only 'local' supported.
@@ -23,6 +23,7 @@ class FilterLogsToPercentageOperator(BaseOperator):
     :param int max_files: Maximum number of files to filter.
     :param bool remove_src: Remove input file after filtering.
     """
+    template_fields = ['glob_pattern']
     ui_color = '#ffefeb'
 
     @apply_defaults

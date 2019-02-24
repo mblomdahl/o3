@@ -14,10 +14,12 @@ class ConvertLogToAvroOperator(BaseOperator):
     """Converts input log file to Avro.
 
     :param str avro_schema_path: Local file path for Avro schema.
-    :param src_filepath: Local file path or callable that produces one.
+    :param src_filepath: Local file path or callable that produces one
+                         (templated).
     :param float validate_percentage: Output percentage to run validation on.
     :param bool remove_src: Remove input file after conversion.
     """
+    template_fields = ['src_filepath_str']
     ui_color = '#ffefeb'
 
     @apply_defaults
@@ -48,8 +50,10 @@ class ConvertLogToAvroOperator(BaseOperator):
         self.remove_src = remove_src
 
     def execute(self, context) -> dict:
-        src_filepath = self.src_filepath_str or self.src_filepath_callable(
-            **context)
+        if self.src_filepath_callable:
+            src_filepath = self.src_filepath_callable(**context)
+        else:
+            src_filepath = self.src_filepath_str
 
         if not src_filepath:
             self.log.info('No filepath found, skipping.')

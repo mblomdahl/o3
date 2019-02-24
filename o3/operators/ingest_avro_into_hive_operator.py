@@ -22,10 +22,12 @@ class IngestAvroIntoHiveOperator(BaseOperator):
 
     :param str target_table: Hive table name to insert into.
     :param str avro_schema_path: Avro schema path in HDFS.
-    :param src_filepath: Local Avro file path or callable that produces one.
+    :param src_filepath: Local Avro file path or callable that produces one,
+                         supports a single path or list of paths (templated).
     :param str hdfs_processing_dir: Directory to use for processing.
     :param bool remove_src: Remove Avro source file.
     """
+    template_fields = ['src_filepath_str']
     ui_color = '#ffefeb'
 
     @apply_defaults
@@ -37,7 +39,7 @@ class IngestAvroIntoHiveOperator(BaseOperator):
         self.target_table = target_table
         self.avro_schema_path = avro_schema_path
 
-        if isinstance(src_filepath, str):
+        if isinstance(src_filepath, (str, list)):
             self.src_filepath_str = src_filepath
             self.src_filepath_callable = None
         elif callable(src_filepath):
