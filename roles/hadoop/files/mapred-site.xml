@@ -34,12 +34,12 @@
 
     <property>
         <name>mapreduce.map.memory.mb</name>
-        <value>512</value>
+        <value>1024</value>
     </property>
 
     <property>
         <name>mapreduce.reduce.memory.mb</name>
-        <value>512</value>
+        <value>1024</value>
     </property>
 
     <property>
