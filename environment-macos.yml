@@ -17,8 +17,8 @@ dependencies:
   - boost-cpp=1.66.0=1
   - boto=2.49.0=py_0
   - bzip2=1.0.6=h1de35cc_1002
-  - ca-certificates=2019.1.23=0
-  - certifi=2018.11.29=py36_0
+  - ca-certificates=2018.11.29=ha4d7672_0
+  - certifi=2018.11.29=py36_1000
   - cffi=1.12.0=py36h342bebf_0
   - chardet=3.0.4=py36_1003
   - click=6.7=py_1
@@ -115,7 +115,7 @@ dependencies:
   - notebook=5.7.4=py36_1000
   - numpy=1.15.4=py36hacdab7b_0
   - numpy-base=1.15.4=py36h6575580_0
-  - openssl=1.0.2p=h1de35cc_0
+  - openssl=1.0.2p=h1de35cc_1002
   - os-client-config=1.29.0=py_0
   - os-service-types=1.5.0=py_0
   - oslo.i18n=3.23.0=py_0
@@ -164,6 +164,7 @@ dependencies:
   - qtconsole=4.4.3=py_0
   - readline=7.0=h1de35cc_5
   - requests=2.21.0=py36_1000
+  - requests-futures=0.9.9=py36_1000
   - requestsexceptions=1.4.0=py_0
   - sasl=0.2.1=py36h0a44026_1001
   - send2trash=1.5.0=py_0
@@ -216,3 +217,5 @@ dependencies:
     - ordereddict==1.1
     - pysftp==0.2.9
     - sshtunnel==0.1.4
+prefix: /Users/mblomdahl/bin/anaconda3/envs/o3
+
