@@ -53,8 +53,8 @@
   tags: jupyter
 
 - name: ensure latest environment is present on the server
-  copy:
-    src: environment-linux.yml
+  template:
+    src: environment-linux.yml.j2
     dest: /home/jupyter/environment-linux.yml
   become: yes
   become_user: jupyter

@@ -51,7 +51,7 @@ Jupyter
 During an Ansible provisioning a Jupyter Notebook will be deployed on port 8888 of the provisioned 
 server. It can also be executed in a development environment, like so:
 
-    conda activate o3; jupyter notebook --notebook-dir=o3/notebooks   
+    conda activate o3; jupyter notebook --notebook-dir=notebooks   
 
 
 Links
