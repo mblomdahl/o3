@@ -11,6 +11,8 @@ hdfs_data_root_path: /data3/hadoop
 yarn_nodemanager_resource_memory_mb: 12288
 yarn_scheduler_maximum_allocation_mb: 12288
 
+hive_heapsize_mb: 4096
+
 hadoop_admins:
   - mblomdahl
   - cbackstrom

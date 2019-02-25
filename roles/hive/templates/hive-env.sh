@@ -42,7 +42,7 @@
 # Larger heap size may be required when running queries over large number of files or partitions.
 # By default hive shell scripts use a heap size of 256 (MB).  Larger heap size would also be
 # appropriate for hive server.
-export HADOOP_HEAPSIZE=4096
+export HADOOP_HEAPSIZE={{ hive_heapsize_mb }}
 
 # Set HADOOP_HOME to point to a specific hadoop install directory
 # HADOOP_HOME=${bin}/../../hadoop

@@ -57,6 +57,17 @@
     - restart hiveserver2
   tags: hive
 
+- name: configure hive-env.sh
+  template:
+    src: hive-env.sh
+    dest: /usr/local/apache-hive-2.3.4-bin/conf/hive-env.sh
+    owner: hadoop
+    group: hadoop
+  notify:
+    - restart hive-metastore
+    - restart hiveserver2
+  tags: hive
+
 - name: configure hive-log4j2.properties
   copy:
     src: hive-log4j2.properties
