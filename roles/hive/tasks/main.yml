@@ -94,7 +94,7 @@
   tags: hive
 
 - name: run schematool init
-  shell: bash -l -c '/usr/local/apache-hive-2.3.4-bin/bin/schematool -dbType mysql -initSchema'
+  shell: bash -il -c '/usr/local/apache-hive-2.3.4-bin/bin/schematool -dbType mysql -initSchema'
   become: yes
   become_user: hadoop
   when: (hive_mariadb_tables.stdout_lines | length) == 0

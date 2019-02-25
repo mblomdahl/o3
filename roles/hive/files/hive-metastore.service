@@ -6,7 +6,7 @@ After=network.target
 User=hadoop
 Group=hadoop
 Type=simple
-ExecStart=/bin/bash -l -c 'hive --service metastore'
+ExecStart=/bin/bash -il -c 'hive --service metastore'
 RestartSec=5s
 
 [Install]
