@@ -62,10 +62,13 @@ class IngestAvroIntoHiveOperator(BaseOperator):
             if not hdfs.exists(temp_avro_path):
                 self.log.info(f'Moving local file {src_filepath} to '
                               f'HDFS {temp_avro_path}')
-                hdfs.put(src_filepath, temp_avro_path, replication=1)
-                if self.remove_src:
-                    self.log.info(f'Removing {src_filepath}.')
-                    os.remove(src_filepath)
+                try:
+                    hdfs.put(src_filepath, temp_avro_path, replication=1)
+                    if self.remove_src:
+                        self.log.info(f'Removing {src_filepath}.')
+                        os.remove(src_filepath)
+                except FileNotFoundError as err:
+                    self.log.error(f'Upload failed: {err}')
             temp_avro_paths.append(temp_avro_path)
 
         return temp_avro_paths
