@@ -22,9 +22,11 @@ airflow_port: 8090
 airflow_admins:
   - mblomdahl
   - cbackstrom
+  - fdesing
 
 jupyter_admins:
   - mblomdahl
   - cbackstrom
+  - fdesing
 
 ...

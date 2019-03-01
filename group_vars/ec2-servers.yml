@@ -16,13 +16,16 @@ src_addr_whitelist:
 airflow_admins:
   - mblomdahl
   - cbackstrom
+  - fdesing
 
 hadoop_admins:
   - mblomdahl
   - cbackstrom
+  - fdesing
 
 jupyter_admins:
   - mblomdahl
   - cbackstrom
+  - fdesing
 
 ...
