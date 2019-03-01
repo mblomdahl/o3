@@ -13,3 +13,14 @@ dags_folder = /home/airflow/airflow_home/dags
 [webserver]
 endpoint_url = http://{{ ansible_default_ipv4.address }}:{{ airflow_port }}
 base_url = http://{{ ansible_default_ipv4.address }}:{{ airflow_port }}
+
+{% if airflow_email_from %}
+[email]
+email_backend = airflow.utils.email.send_email_smtp
+
+[smtp]
+smtp_host = localhost
+smtp_starttls = False
+smtp_port = 25
+smtp_mail_from = {{ airflow_email_from }}
+{% endif %}
