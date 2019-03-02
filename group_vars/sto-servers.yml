@@ -17,8 +17,10 @@ yarn_scheduler_maximum_allocation_mb: 12288
 hadoop_admins:
   - mblomdahl
   - cbackstrom
+  - fdesing
 
 airflow_port: 8090
+airflow_email_from: airflow@sto-docker01
 airflow_admins:
   - mblomdahl
   - cbackstrom
