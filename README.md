@@ -20,7 +20,7 @@ First setup [conda](https://conda.io/projects/conda/en/latest/) with Python 3.6,
     conda activate o3; pip install -e .
     export AIRFLOW_HOME=$(pwd)/airflow_home
     # Checkout your secret enterprise DAGs into `prod-dags` root dir.
-    git clone ssh://git@bitbucket.mycompany.com:7999/~myself/prod-dags.git prod-dags
+    git clone ssh://git@bitbucket.bigCorp.com:7999/ANALY/prod-dags.git prod-dags
     airflow initdb
     # Update newly-generated airflow.cfg in AIRFLOW_HOME by setting `dags_folder=$(pwd)/airflow_home/dags`.
     airflow webserver -p 8080
