@@ -17,8 +17,8 @@ dependencies:
   - boost-cpp=1.66.0=1
   - boto=2.49.0=py_0
   - bzip2=1.0.6=h1de35cc_1002
-  - ca-certificates=2018.11.29=ha4d7672_0
-  - certifi=2018.11.29=py36_1000
+  - ca-certificates=2019.1.23=0
+  - certifi=2018.11.29=py36_0
   - cffi=1.12.0=py36h342bebf_0
   - chardet=3.0.4=py36_1003
   - click=6.7=py_1
@@ -81,7 +81,7 @@ dependencies:
   - libedit=3.1.20181209=hb402a30_0
   - libffi=3.2.1=h475c297_4
   - libgcrypt=1.8.4=h0a44026_1000
-  - libgfortran=4.0.0=0
+  - libgfortran=3.0.1=h93005f0_2
   - libgpg-error=1.32=h0a44026_1000
   - libgsasl=1.8.0=h9955c41_1003
   - libhdfs3=2.3=1
@@ -103,8 +103,8 @@ dependencies:
   - matplotlib-base=3.0.2=py36hf043ca5_1002
   - mistune=0.8.4=py36h1de35cc_1000
   - mkl=2019.1=144
-  - mkl_fft=1.0.10=py36h1de35cc_1
-  - mkl_random=1.0.2=py36h1702cab_2
+  - mkl_fft=1.0.10=py36h5e564d8_0
+  - mkl_random=1.0.2=py36h27c97d8_0
   - monotonic=1.5=py_0
   - munch=2.3.2=py_0
   - nbconvert=5.3.1=py_1
@@ -113,9 +113,9 @@ dependencies:
   - netaddr=0.7.19=py_0
   - netifaces=0.10.7=py36h1de35cc_1000
   - notebook=5.7.4=py36_1000
-  - numpy=1.15.4=py36hacdab7b_0
-  - numpy-base=1.15.4=py36h6575580_0
-  - openssl=1.0.2p=h1de35cc_1002
+  - numpy=1.16.2=py36hacdab7b_0
+  - numpy-base=1.16.2=py36h6575580_0
+  - openssl=1.0.2r=h1de35cc_0
   - os-client-config=1.29.0=py_0
   - os-service-types=1.5.0=py_0
   - oslo.i18n=3.23.0=py_0
@@ -137,6 +137,7 @@ dependencies:
   - psutil=4.4.2=py36_0
   - psycopg2=2.7.7=py36hdbc3d79_0
   - ptyprocess=0.6.0=py36_1000
+  - py4j=0.10.7=py36_0
   - pyasn1=0.4.4=py_1
   - pycparser=2.19=py_0
   - pycrypto=2.6.1=py36h1de35cc_1002
@@ -148,6 +149,7 @@ dependencies:
   - pyqt=5.6.0=py36hc26a216_1008
   - pyrsistent=0.14.10=py36h1de35cc_0
   - pysocks=1.6.8=py36_1002
+  - pyspark=2.4.0=py36_0
   - python=3.6.6=h4a56312_1003
   - python-daemon=2.1.2=py36_0
   - python-dateutil=2.8.0=py_0
@@ -217,5 +219,5 @@ dependencies:
     - ordereddict==1.1
     - pysftp==0.2.9
     - sshtunnel==0.1.4
-prefix: /Users/mblomdahl/bin/anaconda3/envs/o3
+prefix: ~/bin/anaconda3/envs/o3
 
