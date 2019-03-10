@@ -144,6 +144,15 @@
   when: extract_hadoop_tarball is changed
   tags: common
 
+- name: add avro-tools-1.7.7.jar to $HADOOP_HOME/share/hadoop/tools/lib dir
+  copy:
+    src: resources/avro-tools-1.7.7.jar
+    dest: /usr/local/hadoop-2.9.2/share/hadoop/tools/lib/avro-tools-1.7.7.jar
+    mode: 0644
+    owner: hadoop
+    group: hadoop
+  tags: common
+
 - name: extract spark tarball
   unarchive:
     src: resources/spark-2.4.0-bin-hadoop2.7.tgz
@@ -224,6 +233,8 @@
 
       export SPARK_HOME=/usr/local/spark-2.4.0-bin-hadoop2.7
       export SPARK_LOG_DIR=/var/log/hadoop
+
+      export AVRO_TOOLS_PATH=/usr/local/hadoop-2.9.2/share/hadoop/tools/lib/avro-tools-1.7.7.jar
 
       export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH
       export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SPARK_HOME/bin:$SPARK_HOME/sbin:$PATH

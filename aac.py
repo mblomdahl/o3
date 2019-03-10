@@ -11,7 +11,7 @@ from fastavro.read import reader, is_avro
 
 from o3.constants import LOG_CLASSIFIERS
 from o3.utils import split_log_by_classifier, filter_to_percentage, \
-    convert_to_avro
+    convert_to_avro, concat_avro_files, create_concat_filename
 
 
 @click.group()
@@ -179,6 +179,22 @@ def compare_avro(avro_path_a: str, avro_path_b: str, offset: int, limit: int):
             json_file.write(json.dumps({
                 'mismatched_b': sorted(mismatched_b, key=_sort_fn)
             }).encode())
+
+
+@aac.command('concat_avro')
+@click.argument('input_paths', nargs=-1, type=click.Path(exists=True,
+                                                         dir_okay=False))
+@click.option('-o', '--output_path', type=click.Path(dir_okay=False),
+              help='Concatenated output path', default=None)
+@click.option('-t', '--avro_tools_path', type=str,
+              help='Path to avro-tools jar file')
+def concat_avro(input_paths: list, output_path: str, avro_tools_path: str):
+    """Concatenate Avro files."""
+
+    if not output_path:
+        output_path = create_concat_filename(*input_paths)
+    click.echo(concat_avro_files(input_paths, output_path,
+                                 avro_tools_path=avro_tools_path))
 
 
 @aac.command('ingest_avro')

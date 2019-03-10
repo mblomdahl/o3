@@ -1,5 +1,7 @@
 """Common utility functions for `o3` project."""
 
+import difflib
+import genericpath
 import gzip
 import bz2
 import os
@@ -9,11 +11,35 @@ import json
 import datetime
 import random
 import time
+import subprocess
+
+import dictdiffer
 
 from fastavro import writer, parse_schema, validate
 from fastavro.validation import ValidationError
 # And ensure `fastavro` is using C extensions,
 # https://stackoverflow.com/a/39304199/1932683
+
+
+def create_concat_filename(input_path, *input_paths) -> str:
+    if not input_paths:
+        return input_path
+
+    common_prefix = genericpath.commonprefix([input_path] + list(input_paths))
+    common_suffixes, search_idx = [], len(common_prefix)
+    for next_path in input_paths:
+        matcher = difflib.SequenceMatcher(None, input_path, next_path)
+        match = matcher.find_longest_match(search_idx, len(input_path),
+                                           search_idx, len(next_path))
+        common_suffixes.append(next_path[match.a:match.b + match.size])
+
+    shortest_common_suffix = min(common_suffixes, key=lambda _: len(_))
+
+    for suffix in common_suffixes:
+        assert shortest_common_suffix in suffix, (
+            f'Suffix mismatch, {shortest_common_suffix} not in {suffix}')
+
+    return f'{common_prefix}_{common_suffixes[0]}'
 
 
 def open_log_file(log_path: str) -> typing.BinaryIO:
@@ -376,3 +402,68 @@ def convert_to_avro(schema_path: str, log_path: str,
             'duration_sec': duration_sec
         }
     }
+
+
+def concat_avro_files(input_paths: list, output_path: str,
+                      avro_tools_path: str = None) -> None:
+    """Concatenate Avro files using avro-tools jar utility."""
+
+    if not avro_tools_path:
+        avro_tools_path = os.environ.get('AVRO_TOOLS_PATH')
+        if not avro_tools_path:
+            raise AssertionError('AVRO_TOOLS_PATH environment variable missing')
+
+    if not os.path.isfile(avro_tools_path) and avro_tools_path.endswith('.jar'):
+        raise ValueError(f'AVRO_TOOLS_PATH {avro_tools_path!r} does not '
+                         f'resolve to a jar file')
+
+    first_input_schema = None
+    default_subprocess_kwargs = dict(shell=True, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+
+    for file_path in input_paths:
+        if not os.path.isfile(file_path):
+            raise ValueError(f'Input path {file_path!r} is not a file')
+
+        print(f'Reading schema from {file_path!r}...')
+        getmeta = subprocess.run(f'java -jar {avro_tools_path} getmeta '
+                                 f'{file_path} --key avro.schema',
+                                 **default_subprocess_kwargs)
+
+        getmeta.check_returncode()
+        if getmeta.stderr:
+            print(f'getmeta.stderr:\n{getmeta.stderr.decode()}')
+        avro_schema = json.loads(getmeta.stdout.decode())
+
+        if not first_input_schema:
+            first_input_schema = avro_schema
+        else:
+            assert avro_schema == first_input_schema
+
+    print(f'Concatenating Avro files into {output_path!r}...')
+    concat = subprocess.run(f'java -jar {avro_tools_path} concat '
+                            f'{" ".join(input_paths)} {output_path}',
+                            **default_subprocess_kwargs)
+    concat.check_returncode()
+
+    if not os.path.isfile(output_path):
+        raise AssertionError(f'{output_path!r} was not created '
+                             f'(avro-tools stdout: {concat.stdout.decode()!r})')
+
+    print(f'Checking schema in output file {output_path!r}...')
+    getmeta = subprocess.run(f'java -jar {avro_tools_path} getmeta '
+                             f'{output_path} --key avro.schema',
+                             **default_subprocess_kwargs)
+
+    getmeta.check_returncode()
+    output_schema = json.loads(getmeta.stdout.decode())
+
+    diffs = list(dictdiffer.diff(output_schema, first_input_schema))
+    if diffs:
+        print('Differences in output vs input schema:')
+        for diff in diffs:
+            print(diff)
+        assert list(dictdiffer.diff(output_schema['fields'],
+                                    first_input_schema['fields'])) == []
+    else:
+        print('Input/output schema identical')

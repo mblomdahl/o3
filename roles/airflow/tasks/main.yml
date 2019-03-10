@@ -186,7 +186,9 @@
     path: /home/airflow/{{ bash_profile_file }}
     marker: "# {mark} ANSIBLE MANAGED BLOCK airflow-environment"
     block: |
+      export AIRFLOW_GPL_UNIDECODE=yes
       export AIRFLOW_HOME=/home/airflow/airflow_home
+      export AVRO_TOOLS_PATH=/usr/local/hadoop-2.9.2/share/hadoop/tools/lib/avro-tools-1.7.7.jar
       export PATH=/usr/local/hadoop-2.9.2/bin:/usr/local/hadoop-2.9.2/sbin:$PATH
       export JAVA_HOME={{ java_home }}
   become: yes

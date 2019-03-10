@@ -11,6 +11,8 @@ from airflow.utils.decorators import apply_defaults
 from ..hooks.hdfs_hook import HDFSHook
 from ..hooks.pyhive_hook import PyHiveHook
 
+from ..utils import create_concat_filename, concat_avro_files
+
 
 INPUT_FMT = 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat'
 OUTPUT_FMT = 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat'
@@ -25,6 +27,7 @@ class IngestAvroIntoHiveOperator(BaseOperator):
     :param src_filepath: Local Avro file path or callable that produces one,
                          supports a single path or list of paths (templated).
     :param str hdfs_processing_dir: Directory to use for processing.
+    :param bool concat_src: Concatenate Avro source files before loading.
     :param bool remove_src: Remove Avro source file.
     """
     template_fields = ['src_filepath_str']
@@ -33,7 +36,8 @@ class IngestAvroIntoHiveOperator(BaseOperator):
     @apply_defaults
     def __init__(self, target_table: str, avro_schema_path: str,
                  src_filepath, hdfs_processing_dir: str,
-                 remove_src: bool = True, *args, **kwargs):
+                 concat_src: bool = True, remove_src: bool = True,
+                 *args, **kwargs):
         super(IngestAvroIntoHiveOperator, self).__init__(*args, **kwargs)
 
         self.target_table = target_table
@@ -50,7 +54,28 @@ class IngestAvroIntoHiveOperator(BaseOperator):
                 f'Incompatible src_filepath {src_filepath!r}.')
 
         self.hdfs_processing_dir = hdfs_processing_dir.rstrip('/')
+        self.concat_src = concat_src
         self.remove_src = remove_src
+
+    def _concat_src_files(self, src_filepaths: list) -> list:
+        src_concat_path = create_concat_filename(*src_filepaths)
+
+        for src_path in src_filepaths:
+            if not os.path.exists(src_path):
+                if os.path.exists(src_concat_path):
+                    # Give up and rely on concatenated source from last run.
+                    return [src_concat_path]
+                else:
+                    raise AssertionError(f"Don't know what to do with "
+                                         f"non-existent source file {src_path}")
+
+        concat_avro_files(src_filepaths, src_concat_path)
+        if self.remove_src:
+            for src_path in src_filepaths:
+                self.log.info(f'Removing {src_path}.')
+                os.remove(src_path)
+
+        return [src_concat_path]
 
     def _move_src_files_to_hdfs(self, src_filepaths: list) -> list:
         temp_avro_paths = []
@@ -166,6 +191,9 @@ class IngestAvroIntoHiveOperator(BaseOperator):
             src_filepaths = src_filepath
         else:
             src_filepaths = [src_filepath]
+
+        if self.concat_src and len(src_filepaths) > 1:
+            src_filepaths = self._concat_src_files(src_filepaths)
 
         hdfs = HDFSHook().get_conn()
         if not hdfs.exists(avro_schema_path):
