@@ -32,6 +32,7 @@ dependencies:
   - debtcollector=1.20.0=py36_1000
   - decorator=4.3.2=py_0
   - defusedxml=0.5.0=py_1
+  - dictdiffer=0.7.1=py_0
   - dill=0.2.9=py36_0
   - dogpile.cache=0.7.1=py_1000
   - entrypoints=0.3=py36_1000
@@ -130,7 +131,7 @@ dependencies:
   - pendulum=1.4.4=py36_0
   - pexpect=4.6.0=py36_1000
   - pickleshare=0.7.5=py36_1000
-  - pip=19.0.1=py36_0
+  - pip=19.0.3=py36_0
   - prettytable=0.7.2=py_2
   - prometheus_client=0.5.0=py_0
   - prompt_toolkit=2.0.8=py_0

@@ -16,13 +16,18 @@ First setup [conda](https://conda.io/projects/conda/en/latest/) with Python 3.6,
     wget -P resources/ http://apache.mirrors.spacedump.net/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz
     wget -P resources/ http://apache.mirrors.spacedump.net/hive/hive-2.3.4/apache-hive-2.3.4-bin.tar.gz
     wget -P resources/ https://repo.continuum.io/archive/Anaconda3-2018.12-Linux-x86_64.sh
+    wget -P resources/ https://www-eu.apache.org/dist/avro/avro-1.8.2/java/avro-tools-1.8.2.jar
+    wget -P resources/ https://www-eu.apache.org/dist/avro/avro-1.7.7/java/avro-tools-1.7.7.jar
     conda env create --name o3 python=3.6 -f environment-macos.yml
-    conda activate o3; pip install -e .
+    conda activate o3
+    export AIRFLOW_GPL_UNIDECODE=yes
     export AIRFLOW_HOME=$(pwd)/airflow_home
+    export HADOOP_USER_NAME=airflow
+    export AVRO_TOOLS_PATH=$(pwd)/resources/avro-tools-1.7.7.jar
+    pip install -e .
     # Checkout your secret enterprise DAGs into `prod-dags` root dir.
     git clone ssh://git@bitbucket.bigCorp.com:7999/ANALY/prod-dags.git prod-dags
     airflow initdb
-    # Update newly-generated airflow.cfg in AIRFLOW_HOME by setting `dags_folder=$(pwd)/airflow_home/dags`.
     airflow webserver -p 8080
 
 
@@ -34,7 +39,8 @@ corresponding file in this repo, i.e. `environment-linux.yml` and `environment-m
 
     conda create --name o3 --yes python=3.6
     conda install --name o3 -c conda-forge --yes psycopg2 hdfs3 airflow libhdfs3=2.3.0=1 ansible netaddr \
-        ipython pandas fastavro pyhive pyspark jupyter xlrd matplotlib paramiko bcrypt requests-futures
+        ipython pandas fastavro pyhive pyspark jupyter xlrd matplotlib paramiko bcrypt requests-futures \
+        dictdiffer pip
     conda activate o3; pip install -e .
     conda env export --name o3 > environment-<platform>.yml
 

@@ -24,7 +24,7 @@ ci-*
 *.egg-info/
 logs/
 resources/*
-anaconda*
+anaconda3-linux*
 samples/
 pgdata/*
 prod-dags/

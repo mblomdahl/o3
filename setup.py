@@ -14,11 +14,14 @@ setup(
         'hdfs3',
         'apache-airflow[password,ssh]',
         'ansible',
+        'dictdiffer',
         'netaddr',
         'ipython',
+        'jupyter',
         'pandas',
         'fastavro',
-        'pyhive'
+        'pyhive',
+        'pyspark'
     ],
     classifiers=[
         'Environment :: Console',
