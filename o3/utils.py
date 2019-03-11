@@ -14,8 +14,8 @@ import time
 import subprocess
 
 import dictdiffer
-
-from fastavro import writer, parse_schema, validate
+import pandas
+import fastavro
 from fastavro.validation import ValidationError
 # And ensure `fastavro` is using C extensions,
 # https://stackoverflow.com/a/39304199/1932683
@@ -23,6 +23,7 @@ from fastavro.validation import ValidationError
 
 def create_concat_filename(input_path, *input_paths) -> str:
     if not input_paths:
+        assert isinstance(input_path, str)
         return input_path
 
     common_prefix = genericpath.commonprefix([input_path] + list(input_paths))
@@ -252,7 +253,7 @@ def convert_to_avro(schema_path: str, log_path: str,
           f'(PID {os.getpid()})...')
 
     with open(schema_path, 'rb') as schema_file:
-        avro_schema = parse_schema(json.loads(schema_file.read()))
+        avro_schema = fastavro.parse_schema(json.loads(schema_file.read()))
 
     if delete_existing_avro_file and os.path.exists(output_path):
         os.remove(output_path)
@@ -262,10 +263,12 @@ def convert_to_avro(schema_path: str, log_path: str,
     def _write_avro_output():
         if not os.path.exists(output_path):
             with open(output_path, 'wb') as avro_file:
-                writer(avro_file, avro_schema, records, codec='deflate')
+                fastavro.writer(avro_file, avro_schema, records,
+                                codec='deflate')
         else:
             with open(output_path, 'a+b') as avro_file:
-                writer(avro_file, avro_schema, records, codec='deflate')
+                fastavro.writer(avro_file, avro_schema, records,
+                                codec='deflate')
         batch_sizes.append(len(records))
         print(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
               f'Wrote {len(records)} records '
@@ -347,9 +350,12 @@ def convert_to_avro(schema_path: str, log_path: str,
 
                 avro_record[f"c_{str(field).replace('.', '_')}"] = value
 
-            if random.random() * 100.0 <= validate_percentage:
+            if validate_percentage and records_validated < avro_batch_size:
                 records_validated += 1
-                validate(avro_record, avro_schema)
+                fastavro.validate(avro_record, avro_schema)
+            elif random.random() * 100.0 <= validate_percentage:
+                records_validated += 1
+                fastavro.validate(avro_record, avro_schema)
 
             records.append(avro_record)
 
@@ -386,7 +392,7 @@ def convert_to_avro(schema_path: str, log_path: str,
           f'failing to decode {decode_errors} lines, '
           f'invalidating {validation_errors} records '
           f'(in {records_validated} validations), '
-          f'with casting summary {typecasting!r}'
+          f'with casting summary {typecasting!r} '
           f'(PID {os.getpid()}).')
 
     return {
@@ -404,10 +410,7 @@ def convert_to_avro(schema_path: str, log_path: str,
     }
 
 
-def concat_avro_files(input_paths: list, output_path: str,
-                      avro_tools_path: str = None) -> None:
-    """Concatenate Avro files using avro-tools jar utility."""
-
+def _get_avro_tools_cli(avro_tools_path: str = None):
     if not avro_tools_path:
         avro_tools_path = os.environ.get('AVRO_TOOLS_PATH')
         if not avro_tools_path:
@@ -417,17 +420,26 @@ def concat_avro_files(input_paths: list, output_path: str,
         raise ValueError(f'AVRO_TOOLS_PATH {avro_tools_path!r} does not '
                          f'resolve to a jar file')
 
+    return f'java -jar {avro_tools_path} '
+
+
+def concat_avro_files(input_paths: list, output_path: str,
+                      avro_tools_path: str = None) -> None:
+    """Concatenate Avro files using avro-tools jar utility."""
+
+    avro_tools_cli = _get_avro_tools_cli(avro_tools_path)
+
     first_input_schema = None
     default_subprocess_kwargs = dict(shell=True, stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE)
 
     for file_path in input_paths:
-        if not os.path.isfile(file_path):
-            raise ValueError(f'Input path {file_path!r} is not a file')
+        if not fastavro.is_avro(file_path):
+            raise ValueError(f'Input {file_path!r} is not an Avro file')
 
         print(f'Reading schema from {file_path!r}...')
-        getmeta = subprocess.run(f'java -jar {avro_tools_path} getmeta '
-                                 f'{file_path} --key avro.schema',
+        getmeta = subprocess.run(f'{avro_tools_cli} getmeta {file_path} '
+                                 f'--key avro.schema',
                                  **default_subprocess_kwargs)
 
         getmeta.check_returncode()
@@ -441,9 +453,8 @@ def concat_avro_files(input_paths: list, output_path: str,
             assert avro_schema == first_input_schema
 
     print(f'Concatenating Avro files into {output_path!r}...')
-    concat = subprocess.run(f'java -jar {avro_tools_path} concat '
-                            f'{" ".join(input_paths)} {output_path}',
-                            **default_subprocess_kwargs)
+    concat = subprocess.run(f'{avro_tools_cli} concat {" ".join(input_paths)} '
+                            f'{output_path}', **default_subprocess_kwargs)
     concat.check_returncode()
 
     if not os.path.isfile(output_path):
@@ -451,9 +462,8 @@ def concat_avro_files(input_paths: list, output_path: str,
                              f'(avro-tools stdout: {concat.stdout.decode()!r})')
 
     print(f'Checking schema in output file {output_path!r}...')
-    getmeta = subprocess.run(f'java -jar {avro_tools_path} getmeta '
-                             f'{output_path} --key avro.schema',
-                             **default_subprocess_kwargs)
+    getmeta = subprocess.run(f'{avro_tools_cli} getmeta {output_path} '
+                             f'--key avro.schema', **default_subprocess_kwargs)
 
     getmeta.check_returncode()
     output_schema = json.loads(getmeta.stdout.decode())
@@ -467,3 +477,39 @@ def concat_avro_files(input_paths: list, output_path: str,
                                     first_input_schema['fields'])) == []
     else:
         print('Input/output schema identical')
+
+
+def sample_avro_file(input_paths: list, output_path: str, limit: int,
+                     sample_rate: float = 0.5,
+                     avro_tools_path: str = None) -> None:
+    """Sample records from an Avro file using avro-tools jar utility."""
+
+    avro_tools_cli = _get_avro_tools_cli(avro_tools_path)
+
+    default_subprocess_kwargs = dict(shell=True, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+
+    for input_path in input_paths:
+        if not fastavro.is_avro(input_path):
+            raise ValueError(f'Input {input_path!r} is not an Avro file')
+
+    sample_cmd = (f'{avro_tools_cli} cat --limit {limit} '
+                  f'--samplerate {sample_rate} {" ".join(input_paths)} '
+                  f'{output_path}')
+    print(f'Sampling: {sample_cmd!r}...')
+    cat = subprocess.run(sample_cmd, **default_subprocess_kwargs)
+    cat.check_returncode()
+    print(f'Result: {cat.stdout.decode()!r}')
+
+
+def get_dataframe_from_avro(input_path: str) -> pandas.DataFrame:
+    """Create a DataFrame from Avro file (in-memory, mind your sizes)."""
+
+    if not fastavro.is_avro(input_path):
+        raise ValueError(f'Input {input_path!r} is not an Avro file')
+
+    with open(input_path, 'rb') as avro_file:
+        avro_reader = fastavro.reader(avro_file)
+        df = pandas.DataFrame.from_records(list(avro_reader))
+
+    return df

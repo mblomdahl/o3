@@ -89,9 +89,6 @@ class IngestAvroIntoHiveOperator(BaseOperator):
                               f'HDFS {temp_avro_path}')
                 try:
                     hdfs.put(src_filepath, temp_avro_path, replication=1)
-                    if self.remove_src:
-                        self.log.info(f'Removing {src_filepath}.')
-                        os.remove(src_filepath)
                 except FileNotFoundError as err:
                     self.log.error(f'Upload failed: {err}')
             temp_avro_paths.append(temp_avro_path)
@@ -116,13 +113,13 @@ class IngestAvroIntoHiveOperator(BaseOperator):
                 OUTPUTFORMAT '{OUTPUT_FMT}'
                 TBLPROPERTIES ('avro.schema.url'='{full_schema_path}')
             """
-            print(f'--- create_temp_table_stmt ---\n{create_temp_table_stmt}')
+            print('--- create_temp_table_stmt ---')
             cursor.execute(create_temp_table_stmt)
 
             select_temp_row_stmt = f"""
                 SELECT * FROM {temp_table_name} LIMIT 1
             """
-            print(f'--- select_temp_row_stmt---\n{select_temp_row_stmt}')
+            print('--- select_temp_row_stmt ---')
             cursor.execute(select_temp_row_stmt)
 
             if cursor.fetchone() is None:
@@ -130,7 +127,7 @@ class IngestAvroIntoHiveOperator(BaseOperator):
                     LOAD DATA INPATH '{temp_avro_path}'
                     INTO TABLE {temp_table_name}
                 """
-                print(f'--- load_data_stmt ---\n{load_data_stmt}')
+                print('--- load_data_stmt ---')
                 cursor.execute(load_data_stmt)
 
             temp_table_names.append(temp_table_name)
@@ -150,7 +147,7 @@ class IngestAvroIntoHiveOperator(BaseOperator):
             OUTPUTFORMAT '{OUTPUT_FMT}'
             TBLPROPERTIES ('avro.schema.url'='{full_schema_path}')
         """
-        print(f'--- create_target_table_stmt ---\n{create_target_table_stmt}')
+        print('--- create_target_table_stmt ---')
         cursor.execute(create_target_table_stmt)
 
         for temp_table_name in temp_table_names:
@@ -164,13 +161,14 @@ class IngestAvroIntoHiveOperator(BaseOperator):
                 FROM
                     {temp_table_name}
             """
-            print(f'--- insert_data_stmt ---\n{insert_data_stmt}')
+
+            print('--- insert_data_stmt ---')
             cursor.execute(insert_data_stmt)
 
             drop_temp_table_stmt = f"""
                 DROP TABLE {temp_table_name}
             """
-            print(f'--- drop_temp_table_stmt ---\n{drop_temp_table_stmt}')
+            print('--- drop_temp_table_stmt ---')
             cursor.execute(drop_temp_table_stmt)
 
     def execute(self, context) -> None:
@@ -207,3 +205,8 @@ class IngestAvroIntoHiveOperator(BaseOperator):
 
         self._insert_temp_data_into_target_table(temp_table_names,
                                                  full_schema_path)
+
+        if self.remove_src:
+            for src_filepath in src_filepaths:
+                self.log.info(f'Removing {src_filepath}.')
+                os.remove(src_filepath)
