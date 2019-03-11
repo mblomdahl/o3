@@ -11,7 +11,8 @@ from airflow.utils.decorators import apply_defaults
 from ..hooks.hdfs_hook import HDFSHook
 from ..hooks.pyhive_hook import PyHiveHook
 
-from ..utils import create_concat_filename, concat_avro_files
+from ..utils import (create_concat_filename, concat_avro_files,
+                     sample_avro_file, get_dataframe_from_avro)
 
 
 INPUT_FMT = 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat'
@@ -77,6 +78,32 @@ class IngestAvroIntoHiveOperator(BaseOperator):
 
         return [src_concat_path]
 
+    def _get_target_partitions(self, src_filepaths: list) -> (str, str, str):
+        part_ds, part_h, part_en = None, None, None
+        avro_sample_path = f'{create_concat_filename(*src_filepaths)}_max10k'
+        sample_avro_file(src_filepaths, avro_sample_path, limit=10000,
+                         sample_rate=0.1)
+        df = get_dataframe_from_avro(avro_sample_path)
+        os.remove(avro_sample_path)
+        if df.empty:
+            self.log.info('Empty input, no partitions to target')
+            return part_ds, part_h, part_en
+
+        ds_h = df.server_date.iloc[0][:13]
+        if df.server_date.str.startswith(ds_h).all():
+            part_ds, part_h = ds_h.split()
+            self.log.info(f'Partition ds={part_ds} and h={part_h} in '
+                          f'all {df.server_date.count()} samples')
+
+        en = df.event_name.iloc[0]
+        # noinspection PyUnresolvedReferences
+        if (df.event_name == en).all():
+            part_en = en
+            self.log.info(f'Partition en={part_en} in all '
+                          f'{df.event_name.count()} samples')
+
+        return part_ds, part_h, part_en
+
     def _move_src_files_to_hdfs(self, src_filepaths: list) -> list:
         temp_avro_paths = []
         hdfs = HDFSHook().get_conn()
@@ -135,8 +162,16 @@ class IngestAvroIntoHiveOperator(BaseOperator):
         return temp_table_names
 
     def _insert_temp_data_into_target_table(self, temp_table_names: list,
-                                            full_schema_path: str) -> None:
-        conn = PyHiveHook().get_conn()
+                                            full_schema_path: str,
+                                            part_ds: str = None,
+                                            part_h: str = None,
+                                            part_en: str = None) -> None:
+        conn = PyHiveHook(configuration={
+            'hive.exec.dynamic.partition.mode': 'nonstrict',
+            'hive.exec.compress.output': 'true',
+            'avro.output.codec': 'deflate'
+        }).get_conn()
+
         cursor = conn.cursor()
 
         create_target_table_stmt = f"""
@@ -150,14 +185,25 @@ class IngestAvroIntoHiveOperator(BaseOperator):
         print('--- create_target_table_stmt ---')
         cursor.execute(create_target_table_stmt)
 
+        insert_clause = 'INTO'
+        if part_ds and part_h and part_en:
+            partitions = f"ds='{part_ds}', h='{part_h}', en='{part_en}'"
+            if len(temp_table_names) == 1:
+                insert_clause = 'OVERWRITE TABLE'
+        elif part_ds and part_h:
+            partitions = f"ds='{part_ds}', h='{part_h}', en"
+        else:
+            partitions = "ds, h, en"
+
         for temp_table_name in temp_table_names:
             insert_data_stmt = f"""
-                INSERT INTO {self.target_table} PARTITION (ds, h, en)
+                INSERT {insert_clause} {self.target_table}
+                PARTITION ({partitions}) 
                 SELECT
-                    *,
-                    datestamp AS ds,
-                    substr(server_date, 12, 2) AS h,
-                    event_name AS en
+                    *
+                    {'-- ' if part_ds else ', '}datestamp AS ds
+                    {'-- ' if part_h else ', '}substr(server_date, 12, 2) AS h
+                    {'-- ' if part_en else ', '}event_name AS en
                 FROM
                     {temp_table_name}
             """
@@ -193,6 +239,8 @@ class IngestAvroIntoHiveOperator(BaseOperator):
         if self.concat_src and len(src_filepaths) > 1:
             src_filepaths = self._concat_src_files(src_filepaths)
 
+        part_ds, part_h, part_en = self._get_target_partitions(src_filepaths)
+
         hdfs = HDFSHook().get_conn()
         if not hdfs.exists(avro_schema_path):
             raise AirflowException(f'Avro schema {avro_schema_path} not found.')
@@ -203,8 +251,9 @@ class IngestAvroIntoHiveOperator(BaseOperator):
         temp_table_names = self._load_avro_into_temp_tables(temp_avro_paths,
                                                             full_schema_path)
 
-        self._insert_temp_data_into_target_table(temp_table_names,
-                                                 full_schema_path)
+        self._insert_temp_data_into_target_table(
+            temp_table_names, full_schema_path, part_ds=part_ds, part_h=part_h,
+            part_en=part_en)
 
         if self.remove_src:
             for src_filepath in src_filepaths:
