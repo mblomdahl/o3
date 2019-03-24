@@ -8,9 +8,10 @@
 
 - name: ensure {{ hdfs_data_root_path }} exists
   file:
-    path: "{{ hdfs_data_root_path }}"
+    path: "{{ item }}"
     state: directory
     owner: hadoop
+  with_items: "{{ hdfs_data_root_path.split(',') }}"
   tags: hadoop
 
 - name: configure hadoop hdfs-site.xml
@@ -53,7 +54,8 @@
     - name: format hdfs namenode
       shell: /usr/local/hadoop-2.9.2/bin/hdfs namenode -format -nonInteractive
       args:
-        creates: '{{ hdfs_data_root_path }}/nameNode/current/VERSION'
+        creates: '{{ item }}/nameNode/current/VERSION'
+      with_items: "{{ hdfs_data_root_path.split(',') }}"
       tags: hadoop
 
     - name: assert dfs is running
