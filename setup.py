@@ -26,7 +26,12 @@ setup(
         'pandas',
         'fastavro',
         'pyhive',
-        'pyspark'
+        'pyspark',
+        'openpyxl',
+        'xlwt',
+        'fastparquet',
+        'python-snappy',
+        'pyarrow'
     ],
     classifiers=[
         'Environment :: Console',
