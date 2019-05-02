@@ -15,12 +15,12 @@ from o3.utils import split_log_by_classifier, filter_to_percentage, \
 
 
 @click.group()
-def aac():
+def o3_cli():
     """Does nothing, goes nowhere. Use sub-commands."""
     pass
 
 
-@aac.command('filter_logs')
+@o3_cli.command('filter_logs')
 @click.argument('input_path', type=click.Path(exists=True, dir_okay=False))
 @click.argument('percentage', type=float)
 @click.argument('output_path', type=click.Path(dir_okay=False))
@@ -34,7 +34,7 @@ def filter_logs(input_path: str, percentage: float, output_path: str,
                                     prefilter_by=filter_str))
 
 
-@aac.command('split_logs')
+@o3_cli.command('split_logs')
 @click.argument('log_path', type=click.Path(exists=True, dir_okay=False))
 def split_logs(log_path: str):
     """Split log by classifiers."""
@@ -42,7 +42,7 @@ def split_logs(log_path: str):
     click.echo(split_log_by_classifier(log_path, LOG_CLASSIFIERS))
 
 
-@aac.command('to_avro')
+@o3_cli.command('to_avro')
 @click.argument('schema_path', type=click.Path(exists=True, dir_okay=False))
 @click.argument('log_path', type=click.Path(exists=True, dir_okay=False))
 @click.option('-o', '--output_path', type=click.Path(dir_okay=False),
@@ -63,7 +63,7 @@ def to_avro(schema_path: str, log_path: str, output_path: str,
                                max_lines=limit))
 
 
-@aac.command('compare_avro')
+@o3_cli.command('compare_avro')
 @click.argument('avro_path_a', type=click.Path(exists=True, dir_okay=False))
 @click.argument('avro_path_b', type=click.Path(exists=True, dir_okay=False))
 @click.option('-o', '--offset', type=int, help='Start line offset', default=0)
@@ -163,25 +163,25 @@ def compare_avro(avro_path_a: str, avro_path_b: str, offset: int, limit: int):
 
     if len(mismatched_a) or len(mismatched_b):
         click.echo(f'{datetime.datetime.utcnow().isoformat()[:19]}Z '
-                   f'Dumping mismatched objects as aac_compare_avro_a.json and '
-                   f'aac_compare_avro_b.json.')
+                   f'Dumping mismatched objects as o3_cli_compare_avro_a.json '
+                   f'and o3_cli_compare_avro_b.json.')
 
         def _sort_fn(rec):
             return (rec['uuid'] + rec['event_name'] + rec['server_date']
                     + rec['client_local_date'])
 
-        with open('aac_compare_avro_a.json', 'wb') as json_file:
+        with open('o3_cli_compare_avro_a.json', 'wb') as json_file:
             json_file.write(json.dumps({
                 'mismatched_a': sorted(mismatched_a, key=_sort_fn)
             }).encode())
 
-        with open('aac_compare_avro_b.json', 'wb') as json_file:
+        with open('o3_cli_compare_avro_b.json', 'wb') as json_file:
             json_file.write(json.dumps({
                 'mismatched_b': sorted(mismatched_b, key=_sort_fn)
             }).encode())
 
 
-@aac.command('concat_avro')
+@o3_cli.command('concat_avro')
 @click.argument('input_paths', nargs=-1, type=click.Path(exists=True,
                                                          dir_okay=False))
 @click.option('-o', '--output_path', type=click.Path(dir_okay=False),
@@ -197,7 +197,7 @@ def concat_avro(input_paths: list, output_path: str, avro_tools_path: str):
                                  avro_tools_path=avro_tools_path))
 
 
-@aac.command('ingest_avro')
+@o3_cli.command('ingest_avro')
 @click.argument('schema_path', type=click.Path(exists=True, dir_okay=False))
 @click.argument('avro_path', type=click.Path(exists=True, dir_okay=False))
 @click.option('-t', '--target_table', type=str, help='Target table',
@@ -293,7 +293,7 @@ def ingest_avro(schema_path: str, avro_path: str, target_table: str, host: str,
     cursor.execute(drop_temp_table_stmt)
 
 
-@aac.command('delete_dag')
+@o3_cli.command('delete_dag')
 @click.argument('dag_id', type=str)
 def delete_dag(dag_id: str):
     """Delete all references to DAG from Airflow DB."""
@@ -323,4 +323,4 @@ def delete_dag(dag_id: str):
 
 
 if __name__ == '__main__':
-    aac()
+    o3_cli()

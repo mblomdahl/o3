@@ -111,7 +111,7 @@
   become: yes
   become_user: airflow
   with_items:
-    - aac.py
+    - o3_cli.py
     - setup.py
     - o3/__init__.py
     - o3/constants.py

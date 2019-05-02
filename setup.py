@@ -8,6 +8,11 @@ setup(
     url='https://github.com/mblomdahl/o3',
     license='The Unlicense',
     description='Hadoop-Airflow analytics',
+    entry_points={
+        'console_scripts': [
+            'o3-cli = o3_cli:o3_cli'
+        ]
+    },
     # https://pypi.python.org/pypi?:action=list_classifiers
     install_requires=[
         'psycopg2',
