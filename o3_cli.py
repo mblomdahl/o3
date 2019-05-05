@@ -322,5 +322,59 @@ def delete_dag(dag_id: str):
         exit(1)
 
 
+@o3_cli.command('rename_dag')
+@click.argument('old_dag_id', type=str)
+@click.argument('new_dag_id', type=str)
+@click.option('-v', '--verbose', is_flag=True, help='Moar verbose output.')
+def rename_dag(old_dag_id: str, new_dag_id: str, verbose: bool = None):
+    """Rename all mentions of old DAG ID to new DAG ID in Airflow DB."""
+
+    from sqlalchemy.exc import IntegrityError, InvalidRequestError
+    from airflow import settings
+    from airflow.jobs import BaseJob
+    from airflow.models import (XCom, TaskInstance, TaskFail, SlaMiss, DagRun,
+                                DagModel)
+
+    session = settings.Session()
+    things_renamed = 0
+
+    existing_dag = session.query(DagModel).filter(
+        DagModel.dag_id == old_dag_id).first()
+    if existing_dag:
+        existing_dag.dag_id = new_dag_id
+        try:
+            session.commit()
+            things_renamed += 1
+            click.echo(f'Committed renaming of {existing_dag!r} to {new_dag_id!r}.')
+        except (IntegrityError, InvalidRequestError) as integrity_error:
+            session.rollback()
+            click.echo(f'Renaming {existing_dag!r} failed, new DAG ID already '
+                       f'created (err: {str(integrity_error)}.')
+
+    for model in [XCom, TaskInstance, TaskFail, SlaMiss, BaseJob, DagRun]:
+        model_entities_renamed = 0
+        for entity in session.query(model).filter(
+                model.dag_id == old_dag_id).all():
+            if verbose:
+                click.echo(f'Renaming {entity!r}...')
+            entity.dag_id = new_dag_id
+            model_entities_renamed += 1
+
+        if model_entities_renamed:
+            session.commit()
+            click.echo(f'Committed {model_entities_renamed} renamings '
+                       f'for {model.__name__} model.')
+            things_renamed += model_entities_renamed
+
+    if things_renamed:
+        session.commit()
+        session.close()
+        click.echo(f'SUMMARY: {things_renamed} renamings committed in total.')
+        exit(0)
+    else:
+        click.echo(f'Nothing to do for old_dag_id {old_dag_id!r}.')
+        exit(1)
+
+
 if __name__ == '__main__':
     o3_cli()
