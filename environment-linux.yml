@@ -3,8 +3,8 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - airflow=1.10.1=py36_0
-  - alembic=0.8.10=py36_1
+  - airflow=1.10.3post1=py36_0
+  - alembic=0.9.9=py_0
   - ansible=2.7.7=py36_0
   - appdirs=1.4.3=py_1
   - arrow-cpp=0.11.1=py36h5c3f529_0
@@ -19,7 +19,7 @@ dependencies:
   - boost-cpp=1.66.0=1
   - boto=2.49.0=py_0
   - bzip2=1.0.6=h14c3975_1002
-  - ca-certificates=2019.1.23=0
+  - ca-certificates=2019.3.9=hecc5488_0
   - cairo=1.16.0=ha4e643d_1000
   - certifi=2019.3.9=py36_0
   - cffi=1.11.5=py36h9745a5d_1001
@@ -47,8 +47,8 @@ dependencies:
   - fastavro=0.21.18=py36h14c3975_0
   - fastparquet=0.3.0=py36hdd07704_0
   - fixtures=3.0.0=py_0
-  - flask=0.12.4=py_0
-  - flask-admin=1.4.1=py36_0
+  - flask=1.0.2=py_2
+  - flask-admin=1.5.3=py_0
   - flask-babel=0.11.1=py_0
   - flask-caching=1.3.3=py_0
   - flask-openid=1.2.5=py36_1003
@@ -86,9 +86,10 @@ dependencies:
   - jansson=2.11=h14c3975_1001
   - jdcal=1.4.1=py_0
   - jedi=0.13.2=py36_1000
-  - jinja2=2.8=py36_1
+  - jinja2=2.10=py_1
   - jmespath=0.9.3=py_1
   - jpeg=9c=h14c3975_1001
+  - json-merge-patch=0.2=py_0
   - jsonpatch=1.23=py_0
   - jsonpointer=2.0=py_0
   - jsonschema=3.0.0a3=py36_1000
@@ -146,7 +147,7 @@ dependencies:
   - numpy=1.15.4=py36h7e9f1db_0
   - numpy-base=1.15.4=py36hde5b4d6_0
   - openpyxl=2.6.2=py_0
-  - openssl=1.0.2r=h7b6447c_0
+  - openssl=1.0.2r=h14c3975_0
   - os-client-config=1.29.0=py_0
   - os-service-types=1.3.0=py_0
   - oslo.i18n=3.21.0=py_0
@@ -219,10 +220,11 @@ dependencies:
   - sqlite=3.26.0=h7b6447c_0
   - stevedore=1.29.0=py_0
   - tabulate=0.7.7=py36_0
-  - tenacity=4.8.0=py36_0
+  - tenacity=4.12.0=py36_1
   - terminado=0.8.1=py36_1001
   - testpath=0.4.2=py36_1000
   - testtools=2.3.0=py_1
+  - text-unidecode=1.2=py_0
   - thrift=0.11.0=py36hf484d3e_1001
   - thrift-cpp=0.11.0=hc04171f_3
   - thrift_sasl=0.3.0=py36h14c3975_1001

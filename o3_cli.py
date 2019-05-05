@@ -301,12 +301,12 @@ def delete_dag(dag_id: str):
     from airflow import settings
     from airflow.jobs import BaseJob
     from airflow.models import (XCom, TaskInstance, TaskFail, SlaMiss, DagRun,
-                                DagStat, DagModel)
+                                DagModel)
 
     session = settings.Session()
     things_deleted = 0
     for model in [XCom, TaskInstance, TaskFail, SlaMiss, BaseJob, DagRun,
-                  DagStat, DagModel]:
+                  DagModel]:
         for entity in session.query(model).filter(model.dag_id == dag_id).all():
             click.echo(f'Deleting {entity!r}...')
             session.delete(entity)
