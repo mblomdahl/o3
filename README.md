@@ -27,8 +27,31 @@ First setup [conda](https://conda.io/projects/conda/en/latest/) with Python 3.6,
     pip install -e .
     # Checkout your secret enterprise DAGs into `prod-dags` root dir.
     git clone ssh://git@bitbucket.bigCorp.com:7999/ANALY/prod-dags.git prod-dags
+
+
+Start a Postgres database and initialize Airflow DB on it:
+
+    mkdir -p pgdata
+    docker run -d -p 2345:5432 -v $(pwd)/pgdata:/var/lib/postgresql/data --name o3_postgres postgres:9.6
+    # Set sql_alchemy_conn to point at local Postgres around airflow_home/airflow.cfg#L55.
+    sed -i 's|sqlite:////.*|postgresql+psycopg2://postgres:postgres@127.0.0.1:2345/postgres|' airflow_home/airflow.cfg
     airflow initdb
+
+
+Start the Airflow webserver and scheduler:
+
     airflow webserver -p 8080
+
+
+In the repo root dir, from a second terminal session, activate the Python environment and
+start the scheduler:
+
+    conda activate o3
+    export AIRFLOW_HOME=$(pwd)/airflow_home
+    airflow scheduler
+
+
+Finally browse to http://localhost:8080/, and that's it. :)
 
 
 Creating the Conda Environment File
