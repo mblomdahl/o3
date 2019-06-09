@@ -18,6 +18,7 @@ sftp-config.json
 *.tar.gz
 *.gz
 ci-*
+logrx-*
 
 .vault-pass
 

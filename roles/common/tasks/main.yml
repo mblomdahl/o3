@@ -1,27 +1,24 @@
 ---
 
-- block:
-    - name: create 2g swapfile
-      shell: fallocate -l 2G /swapfile && chmod 0600 /swapfile && mkswap /swapfile
-      args:
-        creates: /swapfile
-      register: create_swapfile
-      tags: common
+- name: create 16g swapfile
+  shell: dd if=/dev/zero of=/swapfile count=16384 bs=1MiB && chmod 0600 /swapfile && mkswap /swapfile
+  args:
+    creates: /swapfile
+  register: create_swapfile
+  tags: common
 
-    - name: mount /swapfile
-      mount:
-        src: /swapfile
-        path: swap
-        fstype: swap
-        state: present
-      tags: common
+- name: mount /swapfile
+  mount:
+    src: /swapfile
+    path: swap
+    fstype: swap
+    state: present
+  tags: common
 
-    - name: enable swap
-      shell: swapon -va
-      when: create_swapfile is changed
-      tags: common
-
-  when: ansible_distribution == 'Ubuntu'
+- name: enable swap
+  shell: swapon -va
+  when: create_swapfile is changed
+  tags: common
 
 - name: add o3 routing to /etc/hosts
   blockinfile:
