@@ -98,13 +98,30 @@
   become_user: airflow
   tags: airflow
 
-- name: ensure prod-dags is copied to o3 project root
+- name: ensure prod-dags are copied to o3 project root
   copy:
     src: prod-dags/dags/
     dest: /home/airflow/o3/prod-dags
   become: yes
   become_user: airflow
   ignore_errors: yes
+  tags: airflow
+
+- name: ensure prod-utils are copied to o3 project root
+  copy:
+    src: prod-dags/utils/
+    dest: /home/airflow/o3/prod-utils
+  become: yes
+  become_user: airflow
+  ignore_errors: yes
+  register: copy_over_prod_utils
+  tags: airflow
+
+- name: ensure bash scripts in prod-utils are executable
+  when: copy_over_prod_utils is changed
+  shell: chmod +x /home/airflow/o3/prod-utils/*
+  become: yes
+  become_user: airflow
   tags: airflow
 
 - name: ensure latest code base is copied to remote server
