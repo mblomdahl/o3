@@ -17,7 +17,7 @@ setup(
     install_requires=[
         'psycopg2',
         'hdfs3',
-        'apache-airflow[password,ssh]',
+        'apache-airflow[password,ssh,aws,docker]',
         'ansible',
         'dictdiffer',
         'netaddr',

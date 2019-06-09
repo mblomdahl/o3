@@ -1,0 +1,5 @@
+---
+
+docker_group_members: "{{ docker_default_group_members + docker_extra_group_members}}"
+
+...

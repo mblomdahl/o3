@@ -17,5 +17,7 @@ galaxy_info:
     - airflow
 
 dependencies:
-  - python
-  - docker
+  - role: python
+  - role: docker
+    docker_extra_group_members:
+      - airflow

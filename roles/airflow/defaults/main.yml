@@ -10,6 +10,8 @@ airflow_admins: []
 
 airflow_port: 8080
 
+airflow_task_parallelism: 32
+
 airflow_email_from:
 
 airflow_db_user_password: !vault |

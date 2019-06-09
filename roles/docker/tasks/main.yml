@@ -54,6 +54,11 @@
 
   when: ansible_distribution == 'CentOS'
 
+- name: add members to 'docker' group
+  user: name={{ item }} groups=docker append=yes
+  with_items: "{{ docker_group_members }}"
+  tags: docker
+
 - name: create /etc/docker dir
   file:
     path: /etc/docker
