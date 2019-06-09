@@ -19,6 +19,7 @@ hadoop_admins:
   - cbackstrom
   - fdesing
 
+airflow_hdfs_support: yes
 airflow_port: 8090
 airflow_email_from: airflow@sto-docker01
 airflow_admins:

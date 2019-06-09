@@ -30,20 +30,23 @@
   become_user: airflow
   tags: airflow
 
-- name: assert hdfs /user/airflow dir exists
-  shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -ls /user/airflow
-  register: assert_user_airflow_dir_exists
-  changed_when: no
-  ignore_errors: yes
-  tags: airflow
+- block:
+  - name: assert hdfs /user/airflow dir exists
+    shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -ls /user/airflow
+    register: assert_user_airflow_dir_exists
+    changed_when: no
+    ignore_errors: yes
+    tags: airflow
 
-- name: create hdfs /user/airflow dir if it doesn't exist
-  shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -mkdir -p /user/airflow &&
-         /usr/local/hadoop-2.9.2/bin/hdfs dfs -chown airflow:supergroup /user/airflow
-  when: assert_user_airflow_dir_exists is failed
-  become: yes
-  become_user: hadoop
-  tags: airflow
+  - name: create hdfs /user/airflow dir if it doesn't exist
+    shell: /usr/local/hadoop-2.9.2/bin/hdfs dfs -mkdir -p /user/airflow &&
+           /usr/local/hadoop-2.9.2/bin/hdfs dfs -chown airflow:supergroup /user/airflow
+    when: assert_user_airflow_dir_exists is failed
+    become: yes
+    become_user: hadoop
+    tags: airflow
+
+  when: airflow_hdfs_support
 
 - name: ensure better bash history for airflow user
   blockinfile:
@@ -175,12 +178,6 @@
     - restart airflow-scheduler
   tags: airflow
 
-- name: ensure airflow-enviroment matches template (deprecated)
-  file:
-    path: /home/airflow/airflow-environment
-    state: absent
-  tags: airflow
-
 - name: ensure AIRFLOW_HOME, PATH and JAVA_HOME is set in {{ bash_profile_file }}
   blockinfile:
     path: /home/airflow/{{ bash_profile_file }}
@@ -188,9 +185,11 @@
     block: |
       export AIRFLOW_GPL_UNIDECODE=yes
       export AIRFLOW_HOME=/home/airflow/airflow_home
+      {% if airflow_hdfs_support %}
       export AVRO_TOOLS_PATH=/usr/local/hadoop-2.9.2/share/hadoop/tools/lib/avro-tools-1.7.7.jar
       export PATH=/usr/local/hadoop-2.9.2/bin:/usr/local/hadoop-2.9.2/sbin:$PATH
       export JAVA_HOME={{ java_home }}
+      {% endif %}
   become: yes
   become_user: airflow
   tags: airflow
@@ -240,7 +239,7 @@
   when: ansible_distribution == 'CentOS'
   tags: airflow
 
-- name: ensure airflow services is running and auto-starting
+- name: ensure airflow services are running and auto-starting
   service:
     name: airflow-{{ item }}
     state: started

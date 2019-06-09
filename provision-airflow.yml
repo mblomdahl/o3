@@ -1,0 +1,11 @@
+---
+
+- name: provision airflow
+  hosts: master-nodes
+  become: yes
+  become_user: root
+  roles:
+    - common
+    - airflow
+
+...

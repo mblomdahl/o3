@@ -71,14 +71,19 @@ corresponding file in this repo, i.e. `environment-linux.yml` and `environment-m
 Provisioning
 ------------
 
-    ansible-playbook -i inventories/<inventory>.ini provision.yml
-    
-    
-Jupyter
--------
+Fully-capable Hadoop-Hive environment with Airflow and Jupyter on top:
 
-During an Ansible provisioning a Jupyter Notebook will be deployed on port 8888 of the provisioned 
-server. It can also be executed in a development environment, like so:
+    ansible-playbook -i inventories/<inventory>.ini provision-full.yml --diff
+    
+Airflow-only provisioning:
+
+    ansible-playbook -i inventories/<inventory>.ini provision-airflow.yml --diff
+
+
+### Jupyter
+
+During an Ansible provisioning using `provision-full.yml`, a Jupyter Notebook will be deployed on
+port 8888 of the provisioned server. It can also be executed in a development environment, like so:
 
     conda activate o3; jupyter notebook --notebook-dir=notebooks   
 

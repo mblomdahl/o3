@@ -2,6 +2,8 @@
 
 src_addr_whitelist: []
 
+airflow_hdfs_support: no
+
 source_branch: master
 
 airflow_admins: []
