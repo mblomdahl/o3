@@ -1,7 +1,7 @@
 ---
 
-- name: create 16g swapfile
-  shell: dd if=/dev/zero of=/swapfile count=16384 bs=1MiB && chmod 0600 /swapfile && mkswap /swapfile
+- name: create 4g swapfile
+  shell: dd if=/dev/zero of=/swapfile count=4096 bs=1MiB && chmod 0600 /swapfile && mkswap /swapfile
   args:
     creates: /swapfile
   register: create_swapfile
