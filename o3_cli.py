@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
-import os
-import json
 import datetime
+import glob
+import json
+import os
+import typing
 import click
-
 import hdfs3
 from pyhive import hive
 from fastavro.read import reader, is_avro
+from sqlalchemy.exc import IntegrityError, InvalidRequestError
 
 from o3.constants import LOG_CLASSIFIERS
 from o3.utils import split_log_by_classifier, filter_to_percentage, \
@@ -295,19 +297,29 @@ def ingest_avro(schema_path: str, avro_path: str, target_table: str, host: str,
 
 @o3_cli.command('delete_dag')
 @click.argument('dag_id', type=str)
-def delete_dag(dag_id: str):
+def delete_dag(dag_id: str) -> None:
     """Delete all references to DAG from Airflow DB."""
 
     from airflow import settings
     from airflow.jobs import BaseJob
     from airflow.models import (XCom, TaskInstance, TaskFail, SlaMiss, DagRun,
-                                DagModel)
+                                DagModel, Log)
+
+    dag_related_models = [
+        BaseJob, XCom, TaskInstance, TaskFail, SlaMiss, DagRun, DagModel, Log
+    ]
+
+    try:
+        from airflow.models import DagStat
+        dag_related_models.append(DagStat)
+    except ImportError:
+        pass  # Airflow < `1.10.3` compatibility.
 
     session = settings.Session()
     things_deleted = 0
-    for model in [XCom, TaskInstance, TaskFail, SlaMiss, BaseJob, DagRun,
-                  DagModel]:
-        for entity in session.query(model).filter(model.dag_id == dag_id).all():
+    for model in dag_related_models:
+        for entity in session.query(model).filter(
+                model.dag_id == dag_id).all():
             click.echo(f'Deleting {entity!r}...')
             session.delete(entity)
             things_deleted += 1
@@ -322,54 +334,172 @@ def delete_dag(dag_id: str):
         exit(1)
 
 
+def _rename_dag_id_on_model_entities(model, session, old_dag_id, new_dag_id,
+                                     verbose: bool = None
+                                     ) -> typing.Tuple[int, int]:
+    """Rename matches on old ID to new term in `dag_id` column."""
+    model_entities_renamed, entity_renamings_failed = 0, 0
+    for entity in session.query(model).filter(
+            model.dag_id == old_dag_id).all():
+        if verbose:
+            click.echo(f'Renaming {entity!r}...')
+        entity.dag_id = new_dag_id
+        try:
+            session.commit()
+            model_entities_renamed += 1
+        except (IntegrityError, InvalidRequestError) as integrity_error:
+            session.rollback()
+            entity_renamings_failed += 1
+            click.echo(f'Renaming {entity!r} failed, '
+                       f'conflicting {model.__name__!r} instance '
+                       f'already created? (err: {str(integrity_error)!r}).')
+
+    return model_entities_renamed, entity_renamings_failed
+
+
+def _rename_dag_log_dir(old_dag_log_dir: str, new_dag_log_dir: str) -> int:
+    """Attempt moving the top-level DAG log directory."""
+    total_fs_renamings = 0
+    try:
+        os.rename(old_dag_log_dir, new_dag_log_dir)
+        total_fs_renamings += 1
+    except OSError as move_err:
+        if 'not empty' not in str(move_err):
+            raise move_err  # It's a real error. :)
+
+        for task_dir in glob.glob(os.path.join(old_dag_log_dir, '*')):
+            total_fs_renamings += _rename_task_log_dir(
+                task_dir, task_dir.replace(old_dag_log_dir, new_dag_log_dir))
+
+        click.echo(f'Removing `dag_id` log dir {old_dag_log_dir!r}')
+        os.remove(old_dag_log_dir)
+
+    return total_fs_renamings
+
+
+def _rename_task_log_dir(old_task_log_dir: str, new_task_log_dir: str) -> int:
+    """Attempt moving a Task log dir into a new path under new DAG log dir."""
+    fs_renamings = 0
+    try:
+        click.echo(f'Fallback, renaming task_id dir {old_task_log_dir!r} '
+                   f'-> {new_task_log_dir!r}')
+        os.rename(old_task_log_dir, new_task_log_dir)
+        fs_renamings += 1
+    except OSError as move_err:
+        if 'not empty' not in str(move_err):
+            raise move_err  # Another real error.
+
+        for execution_date_dir in glob.glob(os.path.join(old_task_log_dir,
+                                                         '*')):
+            fs_renamings += _rename_execution_date_log_dir(
+                execution_date_dir, execution_date_dir.replace(
+                    old_task_log_dir, new_task_log_dir))
+
+        click.echo(f'Removing `task_id` log dir {old_task_log_dir!r}')
+        os.remove(old_task_log_dir)
+
+    return fs_renamings
+
+
+def _rename_execution_date_log_dir(old_exec_date_log_dir: str,
+                                   new_exec_date_log_dir: str) -> int:
+    """Attempt moving Task Run log dir to a path under new DAG-Task log dir."""
+    dir_renamings = 0
+    file_renamings = 0
+    try:
+        click.echo(f'Fallback, renaming execution date log dir '
+                   f'{old_exec_date_log_dir!r} -> {new_exec_date_log_dir!r}.')
+        os.rename(old_exec_date_log_dir, new_exec_date_log_dir)
+        dir_renamings += 1
+    except OSError as move_err:
+        if 'not empty' not in str(move_err):
+            raise move_err  # Another real error.
+
+        for old_log_file in glob.glob(os.path.join(old_exec_date_log_dir,
+                                                   '*.log')):
+            new_log_file = old_log_file.replace(
+                old_exec_date_log_dir, new_exec_date_log_dir)
+            click.echo(f'Fallback, renaming log file {old_log_file!r} '
+                       f'-> {new_log_file!r}.')
+            os.rename(old_log_file, new_log_file)
+            file_renamings += 1
+
+        click.echo(f'Removing `execution_date` log dir '
+                   f'{old_exec_date_log_dir!r}.')
+        os.remove(old_exec_date_log_dir)
+
+    return dir_renamings + file_renamings
+
+
 @o3_cli.command('rename_dag')
 @click.argument('old_dag_id', type=str)
 @click.argument('new_dag_id', type=str)
 @click.option('-v', '--verbose', is_flag=True, help='Moar verbose output.')
-def rename_dag(old_dag_id: str, new_dag_id: str, verbose: bool = None):
-    """Rename all mentions of old DAG ID to new DAG ID in Airflow DB."""
+def rename_dag(old_dag_id: str, new_dag_id: str, verbose: bool = None) -> None:
+    """Rename records of old DAG ID in Airflow DB.
 
-    from sqlalchemy.exc import IntegrityError, InvalidRequestError
+    \b
+    Preparatory steps:
+      - Stop the target DAG
+      - Decide on a new name
+      - Apply the necessary code changes in DAG module
+      - Make sure new code is deployed to target environment
+
+    \b
+    How to effectuate the renaming:
+      1. Login as airflow user on the VM that runs Airflow
+      2. Activate Conda o3 virtual environment
+      3. Run the `o3-cli rename_dag <old_name> <new_name>` command
+      4. Wait 15 sec and then verify DAG run history is in place
+      5. Run the `o3-cli delete_dag <old_name>` to remove leftovers
+      6. Enable the new DAG instance via Airflow UI, if desirable
+
+    """
+
     from airflow import settings
     from airflow.jobs import BaseJob
     from airflow.models import (XCom, TaskInstance, TaskFail, SlaMiss, DagRun,
-                                DagModel)
+                                DagModel, Log)
+
+    dag_related_models = [
+        BaseJob, XCom, TaskInstance, TaskFail, SlaMiss, DagRun, DagModel, Log
+    ]
+
+    try:
+        from airflow.models import DagStat
+        dag_related_models.append(DagStat)
+    except ImportError:
+        pass  # Airflow < `1.10.3` compatibility.
 
     session = settings.Session()
-    things_renamed = 0
+    things_renamed, things_failed = 0, 0
 
-    existing_dag = session.query(DagModel).filter(
-        DagModel.dag_id == old_dag_id).first()
-    if existing_dag:
-        existing_dag.dag_id = new_dag_id
-        try:
-            session.commit()
-            things_renamed += 1
-            click.echo(f'Committed renaming of {existing_dag!r} to {new_dag_id!r}.')
-        except (IntegrityError, InvalidRequestError) as integrity_error:
-            session.rollback()
-            click.echo(f'Renaming {existing_dag!r} failed, new DAG ID already '
-                       f'created (err: {str(integrity_error)}.')
+    for model in dag_related_models:
+        model_entities_renamed, entity_renamings_failed = \
+            _rename_dag_id_on_model_entities(model, session, old_dag_id,
+                                             new_dag_id, verbose=verbose)
 
-    for model in [XCom, TaskInstance, TaskFail, SlaMiss, BaseJob, DagRun]:
-        model_entities_renamed = 0
-        for entity in session.query(model).filter(
-                model.dag_id == old_dag_id).all():
-            if verbose:
-                click.echo(f'Renaming {entity!r}...')
-            entity.dag_id = new_dag_id
-            model_entities_renamed += 1
-
-        if model_entities_renamed:
-            session.commit()
-            click.echo(f'Committed {model_entities_renamed} renamings '
-                       f'for {model.__name__} model.')
+        if model_entities_renamed or entity_renamings_failed:
+            click.echo(f'Committed {model_entities_renamed} renamings for '
+                       f'{model.__name__!r} model, failed with '
+                       f'{entity_renamings_failed} entities.')
             things_renamed += model_entities_renamed
+            things_failed += entity_renamings_failed
 
-    if things_renamed:
+    old_log_dir = os.path.join(
+        settings.conf.get('core', 'base_log_folder'), old_dag_id)
+    new_log_dir = os.path.join(
+        settings.conf.get('core', 'base_log_folder'), new_dag_id)
+
+    if os.path.isdir(old_log_dir):
+        click.echo(f'Renaming log dir {old_log_dir!r} -> {new_log_dir!r}.')
+        _rename_dag_log_dir(old_log_dir, new_log_dir)
+
+    if things_renamed or things_failed:
         session.commit()
         session.close()
-        click.echo(f'SUMMARY: {things_renamed} renamings committed in total.')
+        click.echo(f'SUMMARY: {things_renamed} renamings committed in total, '
+                   f'{things_failed} failed.')
         exit(0)
     else:
         click.echo(f'Nothing to do for old_dag_id {old_dag_id!r}.')
