@@ -17,8 +17,9 @@ sftp-config.json
 *.tgz
 *.tar.gz
 *.gz
-ci-*
-logrx-*
+ci-servers*
+logrx-servers*
+dev-servers*
 
 .vault-pass
 
