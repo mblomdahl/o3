@@ -15,6 +15,7 @@ dependencies:
   - babel=2.7.0=py_0
   - backcall=0.1.0=py_0
   - bcrypt=3.1.4=py36h470a237_0
+  - blas=1.0=openblas
   - bleach=3.1.0=py_0
   - boost-cpp=1.66.0=1
   - boto=2.49.0=py_0
@@ -114,6 +115,7 @@ dependencies:
   - libiconv=1.15=h516909a_1005
   - liblapack=3.8.0=10_openblas
   - libntlm=1.4=h14c3975_1002
+  - libopenblas=0.3.6=h5a2b251_0
   - libpng=1.6.37=hed695b0_0
   - libpq=9.6.3=0
   - libprotobuf=3.5.2=hd28b015_1
@@ -143,10 +145,12 @@ dependencies:
   - ncurses=6.1=he6710b0_1
   - netaddr=0.7.19=py_0
   - netifaces=0.10.8=py36h14c3975_1000
+  - nomkl=3.0=0
   - notebook=5.7.8=py36_1
   - numba=0.43.1=py36hf2d7682_0
   - numpy=1.16.4=py36h95a1406_0
-  - openblas=0.3.6=h6e990d7_2
+  - openblas=0.3.6=0
+  - openblas-devel=0.3.6=0
   - openpyxl=2.6.1=py_0
   - openssl=1.0.2r=h14c3975_0
   - os-client-config=1.29.0=py_0
@@ -280,4 +284,3 @@ dependencies:
       - sshtunnel==0.1.4
       - websocket-client==0.56.0
 prefix: /home/airflow/anaconda3/envs/o3
-
