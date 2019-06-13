@@ -6,7 +6,8 @@ After=network.target
 User=airflow
 Group=airflow
 Type=simple
-ExecStart=/bin/bash -ilc 'conda activate o3 && airflow webserver -p {{ airflow_port }}'
+ExecStart=/bin/bash -ilc 'conda activate o3 && airflow webserver -w 2 -p {{ airflow_port }}'
+Restart=on-failure
 RestartSec=5s
 
 [Install]

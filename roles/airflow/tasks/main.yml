@@ -120,6 +120,8 @@
 - name: ensure bash scripts in prod-utils are executable
   when: copy_over_prod_utils is changed
   shell: chmod +x /home/airflow/o3/prod-utils/*
+  args:
+    warn: false
   become: yes
   become_user: airflow
   tags: airflow
@@ -253,6 +255,7 @@
     immediate: yes
     state: enabled
   with_items: "{{ src_addr_whitelist }}"
+  ignore_errors: yes
   when: ansible_distribution == 'CentOS'
   tags: airflow
 
