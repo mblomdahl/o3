@@ -16,6 +16,12 @@ dags_folder = /home/airflow/airflow_home/dags
 endpoint_url = http://{{ ansible_default_ipv4.address }}:{{ airflow_port }}
 base_url = http://{{ ansible_default_ipv4.address }}:{{ airflow_port }}
 
+expose_config = True
+hide_paused_dags_by_default = True
+page_size = 500
+navbar_color = #874627
+default_dag_run_display_number = 100
+
 {% if airflow_email_from %}
 [email]
 email_backend = airflow.utils.email.send_email_smtp
